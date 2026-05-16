@@ -22,25 +22,89 @@ if col_refresh.button("🔄 Rafraîchir", use_container_width=True):
     st.cache_data.clear()
     st.rerun()
 
+
+def _market_from_currency(currency: str) -> str:
+    if currency == "USD":
+        return "US"
+    if currency in ("EUR", "GBP", "CHF", "SEK", "DKK", "NOK"):
+        return "EU"
+    return "WORLD"
+
+
+def _type_from_quote(quote_type: str) -> str:
+    return "etf" if "ETF" in quote_type.upper() else "stock"
+
+
 # ── Add position ───────────────────────────────────────────────────────────────
 data = ptf.load()
 positions = data["positions"]
 
 with st.expander("➕ Ajouter une position", expanded=not positions):
+
+    # Étape 1 : recherche du ticker
+    col_s, col_b = st.columns([4, 1])
+    ticker_search = col_s.text_input(
+        "Rechercher un ticker",
+        placeholder="ex: AAPL, IWDA.AS, MC.PA",
+        label_visibility="collapsed",
+    )
+    if col_b.button("Rechercher", use_container_width=True):
+        if ticker_search.strip():
+            with st.spinner(f"Recherche {ticker_search.upper()}..."):
+                info = fetcher.get_fundamentals(ticker_search.strip().upper())
+            ccy = info.get("currency", "USD")
+            st.session_state["_lookup"] = {
+                "ticker": ticker_search.strip().upper(),
+                "name": info.get("name", ticker_search.upper()),
+                "sector": info.get("sector", ""),
+                "currency": ccy,
+                "market": _market_from_currency(ccy),
+                "type": _type_from_quote(info.get("quote_type", "EQUITY")),
+            }
+        else:
+            st.warning("Entre un ticker.")
+
+    lk = st.session_state.get("_lookup", {})
+    if lk.get("name"):
+        parts = [lk["name"]]
+        if lk.get("sector"):
+            parts.append(lk["sector"])
+        parts.append(lk.get("currency", ""))
+        st.caption(" · ".join(p for p in parts if p))
+
+    st.divider()
+
+    # Étape 2 : formulaire pré-rempli
+    type_opts = ["stock", "etf"]
+    market_opts = ["US", "EU", "WORLD"]
+    ccy_opts = ["USD", "EUR", "GBP", "CHF"]
+
     with st.form("add_position", clear_on_submit=True):
         c1, c2 = st.columns(2)
-        ticker_in = c1.text_input("Ticker *", placeholder="ex: AAPL, IWDA.AS, MC.PA")
-        name_in = c2.text_input("Nom *", placeholder="ex: Apple Inc.")
+        ticker_in = c1.text_input("Ticker *", value=lk.get("ticker", ""))
+        name_in = c2.text_input("Nom *", value=lk.get("name", ""))
 
         c3, c4, c5 = st.columns(3)
-        type_in = c3.selectbox("Type", ["stock", "etf"])
-        market_in = c4.selectbox("Marché", ["US", "EU", "WORLD"])
-        sector_in = c5.text_input("Secteur", placeholder="ex: Technology")
+        type_default = lk.get("type", "stock")
+        type_in = c3.selectbox(
+            "Type", type_opts,
+            index=type_opts.index(type_default) if type_default in type_opts else 0,
+        )
+        market_default = lk.get("market", "US")
+        market_in = c4.selectbox(
+            "Marché", market_opts,
+            index=market_opts.index(market_default) if market_default in market_opts else 0,
+        )
+        sector_in = c5.text_input("Secteur", value=lk.get("sector", ""))
 
         c6, c7, c8 = st.columns(3)
         shares_in = c6.number_input("Nb d'actions *", min_value=0.001, step=0.001, format="%.3f")
         price_in = c7.number_input("Prix moyen d'achat *", min_value=0.0001, step=0.01, format="%.4f")
-        currency_in = c8.selectbox("Devise", ["USD", "EUR", "GBP", "CHF"])
+        ccy_default = lk.get("currency", "USD")
+        currency_in = c8.selectbox(
+            "Devise", ccy_opts,
+            index=ccy_opts.index(ccy_default) if ccy_default in ccy_opts else 0,
+        )
 
         date_in = st.date_input("Date d'achat", value=date.today())
         notes_in = st.text_area("Notes", height=68)
@@ -62,7 +126,8 @@ with st.expander("➕ Ajouter une position", expanded=not positions):
                         sector=sector_in.strip(),
                         notes=notes_in.strip(),
                     )
-                st.success(f"✓ {ticker_in.upper()} ajouté et sauvegardé dans le repo.")
+                st.session_state.pop("_lookup", None)
+                st.success(f"✓ {ticker_in.upper()} ajouté.")
                 st.rerun()
 
 # ── Portfolio display ──────────────────────────────────────────────────────────
@@ -93,7 +158,7 @@ if not enriched:
     st.warning("Impossible de récupérer les cours. Réessaie plus tard.")
     st.stop()
 
-# Metrics
+# Métriques
 total_value = sum(p["current_value_eur"] for p in enriched)
 total_cost = sum(p["cost_basis_eur"] for p in enriched)
 total_pnl = total_value - total_cost
@@ -107,7 +172,7 @@ m4.metric("Positions", len(enriched))
 
 st.divider()
 
-# Positions table
+# Tableau des positions
 df = pd.DataFrame([{
     "Ticker": p["ticker"],
     "Nom": p["name"],
@@ -134,7 +199,7 @@ st.dataframe(
     },
 )
 
-# Charts
+# Graphiques
 st.divider()
 col1, col2 = st.columns(2)
 
@@ -150,7 +215,7 @@ with col2:
     fig2.update_layout(margin=dict(t=40, b=0, l=0, r=0))
     st.plotly_chart(fig2, use_container_width=True)
 
-# Remove position
+# Supprimer une position
 st.divider()
 with st.expander("🗑️ Supprimer une position"):
     options = {f"{p['ticker']} — {p['name']}": p["id"] for p in positions}

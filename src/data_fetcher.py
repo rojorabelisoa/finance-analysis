@@ -49,6 +49,7 @@ def get_fundamentals(ticker: str) -> dict:
             "week_52_high": info.get("fiftyTwoWeekHigh"),
             "week_52_low": info.get("fiftyTwoWeekLow"),
             "currency": info.get("currency", "USD"),
+            "quote_type": info.get("quoteType", "EQUITY"),
             "description": info.get("longBusinessSummary", ""),
         }
     except Exception:

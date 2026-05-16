@@ -80,7 +80,22 @@ def _save_github(data: dict, message: str) -> None:
     }
     if sha:
         payload["sha"] = sha
-    requests.put(_api_url(), headers=_headers(), json=payload, timeout=10).raise_for_status()
+    resp = requests.put(_api_url(), headers=_headers(), json=payload, timeout=10)
+    if not resp.ok:
+        try:
+            import streamlit as st
+            detail = resp.json().get("message", resp.text)
+            st.error(
+                f"Erreur GitHub API ({resp.status_code}) : **{detail}**\n\n"
+                f"Vérifie dans Streamlit Cloud → Settings → Secrets :\n"
+                f"- `GITHUB_TOKEN` a bien le scope `public_repo`\n"
+                f"- `GITHUB_BRANCH` = `feature/stock-investment-project-setup-TQjkI`\n"
+                f"- `GITHUB_REPO` = `rojorabelisoa/finance-analysis`"
+            )
+            st.stop()
+        except ImportError:
+            pass
+    resp.raise_for_status()
 
 
 def load() -> dict:

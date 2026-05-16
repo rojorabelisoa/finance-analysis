@@ -44,25 +44,36 @@ with st.expander("➕ Ajouter une position", expanded=not positions):
     # Étape 1 : recherche du ticker
     col_s, col_b = st.columns([4, 1])
     ticker_search = col_s.text_input(
-        "Rechercher un ticker",
-        placeholder="ex: AAPL, IWDA.AS, MC.PA",
+        "Rechercher un ticker ou ISIN",
+        placeholder="ex: AAPL · IWDA.AS · MC.PA · FR0000131104",
         label_visibility="collapsed",
     )
     if col_b.button("Rechercher", use_container_width=True):
-        if ticker_search.strip():
-            with st.spinner(f"Recherche {ticker_search.upper()}..."):
-                info = fetcher.get_fundamentals(ticker_search.strip().upper())
-            ccy = info.get("currency", "USD")
-            st.session_state["_lookup"] = {
-                "ticker": ticker_search.strip().upper(),
-                "name": info.get("name", ticker_search.upper()),
-                "sector": info.get("sector", ""),
-                "currency": ccy,
-                "market": _market_from_currency(ccy),
-                "type": _type_from_quote(info.get("quote_type", "EQUITY")),
-            }
+        query = ticker_search.strip().upper()
+        if not query:
+            st.warning("Entre un ticker ou un ISIN.")
         else:
-            st.warning("Entre un ticker.")
+            if fetcher.is_isin(query):
+                with st.spinner(f"Résolution ISIN {query}..."):
+                    resolved = fetcher.isin_to_ticker(query)
+                if not resolved:
+                    st.error(f"ISIN {query} introuvable sur Yahoo Finance.")
+                    resolved = None
+                else:
+                    st.caption(f"ISIN {query} → **{resolved}**")
+                    query = resolved
+            if query:
+                with st.spinner(f"Recherche {query}..."):
+                    info = fetcher.get_fundamentals(query)
+                ccy = info.get("currency", "USD")
+                st.session_state["_lookup"] = {
+                    "ticker": query,
+                    "name": info.get("name", query),
+                    "sector": info.get("sector", ""),
+                    "currency": ccy,
+                    "market": _market_from_currency(ccy),
+                    "type": _type_from_quote(info.get("quote_type", "EQUITY")),
+                }
 
     lk = st.session_state.get("_lookup", {})
     if lk.get("name"):

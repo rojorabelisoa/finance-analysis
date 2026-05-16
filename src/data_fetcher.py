@@ -1,8 +1,26 @@
 from __future__ import annotations
 
+import re
+
 import pandas as pd
 import streamlit as st
 import yfinance as yf
+
+
+def is_isin(query: str) -> bool:
+    return bool(re.match(r"^[A-Z]{2}[A-Z0-9]{10}$", query.strip().upper()))
+
+
+@st.cache_data(ttl=3600)
+def isin_to_ticker(isin: str) -> str | None:
+    try:
+        results = yf.Search(isin.upper(), max_results=1, enable_fuzzy_query=False)
+        quotes = results.quotes
+        if quotes:
+            return quotes[0].get("symbol")
+    except Exception:
+        pass
+    return None
 
 
 @st.cache_data(ttl=300)

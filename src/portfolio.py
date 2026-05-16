@@ -20,6 +20,24 @@ def _secrets() -> dict:
         return {}
 
 
+def _check_secrets() -> None:
+    if not _secrets().get("GITHUB_TOKEN"):
+        try:
+            import streamlit as st
+            st.error(
+                "**Configuration manquante.** Ajoute tes secrets dans Streamlit Cloud :\n\n"
+                "App Settings → Secrets → colle ceci :\n"
+                "```toml\n"
+                "GITHUB_TOKEN  = \"ghp_ton_token\"\n"
+                "GITHUB_REPO   = \"rojorabelisoa/finance-analysis\"\n"
+                "GITHUB_BRANCH = \"feature/stock-investment-project-setup-TQjkI\"\n"
+                "```"
+            )
+            st.stop()
+        except ImportError:
+            raise RuntimeError("GITHUB_TOKEN manquant dans les secrets.")
+
+
 def _headers() -> dict:
     return {
         "Authorization": f"token {_secrets()['GITHUB_TOKEN']}",
@@ -66,6 +84,7 @@ def _save_github(data: dict, message: str) -> None:
 
 
 def load() -> dict:
+    _check_secrets()
     data, _ = _load_github()
     return data
 

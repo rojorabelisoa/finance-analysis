@@ -2,18 +2,5 @@
   "attribution": {
     "commit": "",
     "pr": ""
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "git config user.name 'rojorabelisoa' && git config user.email 'rojorabelisoa@yahoo.fr' 2>/dev/null || true"
-          }
-        ]
-      }
-    ]
   }
 }

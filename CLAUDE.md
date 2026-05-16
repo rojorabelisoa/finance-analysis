@@ -6,7 +6,7 @@
 |---|---|
 | 1. Cadrage & décisions | ✅ Terminé |
 | 2. Architecture & structure du projet | ✅ Décidée |
-| 3. Implémentation — modèle de données & portfolio | ⬜ À faire |
+| 3. Implémentation — modèle de données & portfolio | ✅ Terminé |
 | 4. Implémentation — analyse fondamentale | ⬜ À faire |
 | 5. Implémentation — screener | ⬜ À faire |
 | 6. Implémentation — alertes & rapports | ⬜ À faire |
@@ -48,9 +48,11 @@ Python
 - Taux de change EUR/USD récupérés via yfinance également
 
 ### Persistance des données
-- Fichiers **JSON** dans le repo (`data/portfolio.json`, `data/watchlist.json`)
-- Modifiés via l'interface Streamlit
-- Versionnés avec git (historique des modifications natif)
+- **GitHub API** — lecture et écriture via l'API GitHub (`PUT /contents/`)
+- Chaque ajout/suppression crée un commit automatique dans le repo
+- `data/portfolio.json` et `data/watchlist.json` restent la source de vérité
+- Token configuré dans Streamlit Secrets (`GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`)
+- Même comportement en local et sur Streamlit Cloud
 
 ### Fonctionnalités (ordre de priorité)
 1. **Suivi de portefeuille** — positions, prix d'achat, P&L, allocation par actif/secteur/géo
@@ -88,17 +90,36 @@ finance-analysis/
 
 ---
 
+## Configuration Streamlit Secrets
+
+Pour que l'app fonctionne (local ou Cloud), créer `.streamlit/secrets.toml` :
+
+```toml
+GITHUB_TOKEN  = "ghp_xxxxxxxxxxxx"   # Personal Access Token (scope: repo)
+GITHUB_REPO   = "rojorabelisoa/finance-analysis"
+GITHUB_BRANCH = "main"
+```
+
+Sur Streamlit Cloud : App Settings → Secrets (coller le contenu directement).
+
+---
+
 ## Questions ouvertes
 
-_Toutes les questions structurantes sont résolues. Les prochaines décisions seront prises pendant l'implémentation._
-
-- [ ] Format exact de `portfolio.json` (à définir en phase 3)
-- [ ] Liste des métriques fondamentales à afficher en priorité
+- [ ] Liste des métriques fondamentales à afficher en priorité (P/E, PEG, dividende…)
 - [ ] Univers par défaut du screener (S&P 500 ? CAC 40 ? Les deux ?)
+- [ ] Souhait d'un graphique d'évolution historique du portefeuille sur la page principale ?
 
 ---
 
 ## Journal des sessions
+
+### 2026-05-16 — Session 2 : Implémentation phase 3
+- Persistance via GitHub API (lecture/écriture directe, crée un commit par modification)
+- Fichiers créés : `app.py`, `src/portfolio.py`, `src/data_fetcher.py`, `src/utils.py`
+- Pages créées : `1_Portfolio.py` (complet), `2_Analyse`, `3_Screener`, `4_Alertes` (stubs)
+- Format `portfolio.json` défini : positions avec id, ticker, type, marché, shares, avg_price, currency, buy_date
+- Prochaine étape : analyse fondamentale (phase 4)
 
 ### 2026-05-16 — Session 1 : Cadrage & architecture
 - Définition complète du besoin via questionnaire

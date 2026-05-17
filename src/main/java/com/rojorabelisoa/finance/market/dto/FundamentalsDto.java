@@ -16,6 +16,8 @@ public record FundamentalsDto(
         Double dividendYield,
         Double week52High,
         Double week52Low,
+        String type,
+        String market,
         String description
 ) {
 }

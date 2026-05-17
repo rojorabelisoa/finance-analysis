@@ -2,6 +2,7 @@ package com.rojorabelisoa.finance.market;
 
 import com.rojorabelisoa.finance.market.dto.FundamentalsDto;
 import com.rojorabelisoa.finance.market.dto.QuoteDto;
+import com.rojorabelisoa.finance.market.dto.SearchResultDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -58,7 +59,7 @@ public class MarketService {
     public FundamentalsDto getFundamentals(String ticker) {
         try {
             Map<?, ?> body = yahooClient.get()
-                    .uri("/v10/finance/quoteSummary/{ticker}?modules=summaryDetail,defaultKeyStatistics,financialData,assetProfile", ticker)
+                    .uri("/v10/finance/quoteSummary/{ticker}?modules=summaryDetail,defaultKeyStatistics,financialData,assetProfile,quoteType", ticker)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
@@ -77,6 +78,7 @@ public class MarketService {
             Map<?, ?> keyStats = (Map<?, ?>) result.get("defaultKeyStatistics");
             Map<?, ?> financialData = (Map<?, ?>) result.get("financialData");
             Map<?, ?> assetProfile = (Map<?, ?>) result.get("assetProfile");
+            Map<?, ?> quoteTypeModule = (Map<?, ?>) result.get("quoteType");
 
             Double trailingPe = extractRaw(summaryDetail, "trailingPE");
             Double forwardPe = extractRaw(summaryDetail, "forwardPE");
@@ -97,13 +99,62 @@ public class MarketService {
 
             String currency = summaryDetail != null ? (String) summaryDetail.get("currency") : null;
 
+            String rawQuoteType = quoteTypeModule != null ? (String) quoteTypeModule.get("quoteType") : "EQUITY";
+            String type = deriveType(rawQuoteType);
+            String market = deriveMarket(currency);
+
             return new FundamentalsDto(
                     ticker, name, sector, industry, currency, marketCap,
                     trailingPe, forwardPe, pegRatio, eps, epsGrowth, revenueGrowth,
-                    dividendYield, week52High, week52Low, description
+                    dividendYield, week52High, week52Low, type, market, description
             );
         } catch (Exception e) {
             return emptyFundamentals(ticker);
+        }
+    }
+
+    @Cacheable("search")
+    public List<SearchResultDto> searchSuggestions(String query) {
+        try {
+            // Si ISIN, résoudre d'abord
+            String searchQuery = query;
+            if (query.matches("[A-Z]{2}[A-Z0-9]{10}")) {
+                String resolved = resolveIsin(query);
+                if (resolved != null) searchQuery = resolved;
+            }
+
+            Map<?, ?> body = yahooClient.get()
+                    .uri("/v1/finance/search?q={q}&quotesCount=8&newsCount=0&enableFuzzyQuery=true", searchQuery)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+
+            if (body == null) return List.of();
+
+            List<?> quotes = (List<?>) body.get("quotes");
+            if (quotes == null) return List.of();
+
+            return quotes.stream()
+                    .filter(q -> q instanceof Map<?, ?>)
+                    .map(q -> (Map<?, ?>) q)
+                    .filter(q -> {
+                        String type = (String) ((Map<?, ?>) q).get("quoteType");
+                        return type != null && (type.equals("EQUITY") || type.equals("ETF") || type.equals("MUTUALFUND"));
+                    })
+                    .map(q -> {
+                        Map<?, ?> m = (Map<?, ?>) q;
+                        String name = m.get("longname") != null ? (String) m.get("longname") : (String) m.get("shortname");
+                        return new SearchResultDto(
+                                (String) m.get("symbol"),
+                                name != null ? name : "",
+                                deriveType((String) m.get("quoteType")),
+                                (String) m.get("exchange")
+                        );
+                    })
+                    .limit(6)
+                    .toList();
+        } catch (Exception e) {
+            return List.of();
         }
     }
 
@@ -176,12 +227,29 @@ public class MarketService {
         return toLong(field);
     }
 
+    private String deriveType(String quoteType) {
+        if (quoteType == null) return "stock";
+        return switch (quoteType.toUpperCase()) {
+            case "ETF", "MUTUALFUND" -> "etf";
+            default -> "stock";
+        };
+    }
+
+    private String deriveMarket(String currency) {
+        if (currency == null) return "US";
+        return switch (currency) {
+            case "USD" -> "US";
+            case "EUR", "GBP", "CHF", "SEK", "NOK", "DKK" -> "EU";
+            default -> "WORLD";
+        };
+    }
+
     private QuoteDto emptyQuote(String ticker) {
         return new QuoteDto(ticker, null, null, null, null, null, null, null);
     }
 
     private FundamentalsDto emptyFundamentals(String ticker) {
         return new FundamentalsDto(ticker, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

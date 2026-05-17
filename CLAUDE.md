@@ -119,9 +119,81 @@ finance-analysis/
     └── public/
 ```
 
+## Architecture logicielle
+
+### Backend — Layered architecture (par feature)
+Chaque feature est un package autonome avec ses 3 couches : Controller → Service → Repository.
+
+```
+com.rojorabelisoa.finance/
+├── auth/                        → feature authentification
+│   ├── AuthController.java      (couche web — endpoints REST)
+│   ├── AuthService.java         (couche métier — logique)
+│   ├── dto/                     (LoginRequest, RegisterRequest, TokenResponse)
+│   └── JwtService.java          (génération / validation JWT)
+├── portfolio/                   → feature portefeuille
+│   ├── PositionController.java
+│   ├── PositionService.java
+│   ├── PositionRepository.java  (couche données — JPA)
+│   └── Position.java            (entité JPA)
+├── market/                      → feature données marché
+│   ├── MarketController.java
+│   ├── MarketService.java       (appels Yahoo Finance via WebClient)
+│   └── dto/                     (QuoteDto, FundamentalsDto)
+├── user/
+│   ├── User.java                (entité JPA)
+│   └── UserRepository.java
+└── shared/
+    ├── config/
+    │   ├── SecurityConfig.java  (Spring Security + filtre JWT)
+    │   └── WebClientConfig.java
+    └── exception/
+        └── GlobalExceptionHandler.java
+```
+
+### Frontend — Feature-based architecture
+Chaque feature encapsule ses propres composants, hooks et appels API.
+
+```
+frontend/src/
+├── features/
+│   ├── auth/
+│   │   ├── components/          (LoginForm.jsx, RegisterForm.jsx)
+│   │   ├── hooks/               (useAuth.js)
+│   │   └── services/            (authService.js)
+│   ├── portfolio/
+│   │   ├── components/          (PositionTable.jsx, AllocationChart.jsx, AddPositionForm.jsx)
+│   │   ├── hooks/               (usePortfolio.js)
+│   │   └── services/            (portfolioService.js)
+│   ├── market/
+│   │   ├── components/          (QuoteCard.jsx, FundamentalsPanel.jsx, PriceChart.jsx)
+│   │   ├── hooks/               (useMarket.js)
+│   │   └── services/            (marketService.js)
+│   └── screener/
+│       ├── components/
+│       └── services/
+├── context/
+│   ├── AuthContext.jsx          (token JWT, user courant)
+│   └── PortfolioContext.jsx     (état global du portefeuille)
+├── shared/
+│   ├── components/              (Button, Card, Table, Badge...)
+│   └── hooks/                   (useApi.js — wrapper Axios + gestion erreurs)
+├── App.jsx                      (routes React Router)
+└── main.jsx
+```
+
+### Flux de données
+```
+React feature service → Axios (+ intercepteur JWT) → Spring Controller
+                                                          ↓
+                                                    Spring Service
+                                                          ↓
+                                              Repository (JPA) / WebClient (Yahoo)
+```
+
 ---
 
-## Variables d'environnement (Render)
+
 
 ```
 DATABASE_URL   = postgresql://user:pass@host/dbname

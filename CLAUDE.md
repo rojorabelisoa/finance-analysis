@@ -212,6 +212,21 @@ JWT_SECRET     = une_chaine_aleatoire_longue
 
 ## Journal des sessions
 
+### 2026-05-17 — Session 4 : Implémentation Spring Boot + React (phases 1–11)
+- Tous les fichiers backend implémentés (25 classes Java)
+  - Auth JWT complet (JwtService, JwtAuthFilter, AuthService, SecurityConfig)
+  - Portfolio CRUD (Position entity, PositionService, PositionController + DTOs)
+  - Market data via Yahoo Finance unofficial API (MarketService avec cache Caffeine, MarketController)
+  - Gestion d'erreurs centralisée (AppException, GlobalExceptionHandler)
+  - SpaController pour servir React depuis Spring Boot
+- Tous les fichiers frontend implémentés (React + Vite + Tailwind)
+  - Auth (AuthContext, LoginForm, RegisterForm, LoginPage, RegisterPage)
+  - Portfolio (PortfolioContext, PositionTable, AllocationChart, AddPositionForm, PortfolioPage)
+  - Market (QuoteCard, FundamentalsPanel, AnalysePage) avec résolution ISIN
+  - Shared UI (Navbar, Card, Badge, useApi hook)
+- Ancien code Streamlit/Python supprimé du repo
+- Prochaine étape : déploiement sur Render (phase 12)
+
 ### 2026-05-17 — Session 3 : Pivot vers Spring Boot + React
 - Décision de remplacer Streamlit/Python par Spring Boot 3 (Java 21, Maven) + React
 - Source de données : Yahoo Finance non officiel (illimité) au lieu d'Alpha Vantage (25 req/jour)

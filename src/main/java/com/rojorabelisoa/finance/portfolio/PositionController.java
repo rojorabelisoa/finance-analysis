@@ -23,13 +23,13 @@ public class PositionController {
 
     private final PositionService positionService;
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<List<PositionResponse>> getPositions() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(positionService.getPositions(username));
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<PositionResponse> addPosition(@RequestBody PositionRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.status(HttpStatus.CREATED).body(positionService.addPosition(username, request));

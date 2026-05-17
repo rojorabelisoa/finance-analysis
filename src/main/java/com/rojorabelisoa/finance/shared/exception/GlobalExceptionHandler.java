@@ -1,6 +1,7 @@
 package com.rojorabelisoa.finance.shared.exception;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -12,6 +13,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AppException.class)
     public ResponseEntity<Map<String, String>> handleAppException(AppException ex) {
         return ResponseEntity.status(ex.getStatus())
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleUsernameNotFoundException(UsernameNotFoundException ex) {
+        return ResponseEntity.status(404)
                 .body(Map.of("error", ex.getMessage()));
     }
 

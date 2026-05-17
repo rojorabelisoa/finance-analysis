@@ -7,8 +7,6 @@ import com.rojorabelisoa.finance.shared.exception.AppException;
 import com.rojorabelisoa.finance.user.User;
 import com.rojorabelisoa.finance.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,7 +20,6 @@ public class AuthService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
 
     public TokenResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.username())) {
@@ -44,11 +41,11 @@ public class AuthService implements UserDetailsService {
     }
 
     public TokenResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
-        );
         User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new UsernameNotFoundException(request.username()));
+                .orElseThrow(() -> new AppException("Invalid credentials", 401));
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new AppException("Invalid credentials", 401);
+        }
         String token = jwtService.generateToken(user);
         return new TokenResponse(token, user.getUsername());
     }

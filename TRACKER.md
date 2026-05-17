@@ -86,7 +86,7 @@
 ## Déploiement
 
 ### Phase 12 — Render
-- [ ] PostgreSQL créé sur Render
-- [ ] Variables d'environnement configurées
-- [ ] Service Web déployé et opérationnel
-- [ ] Tests end-to-end
+- [x] PostgreSQL créé sur Render
+- [x] Variables d'environnement configurées
+- [x] Service Web déployé et opérationnel
+- [x] Tests end-to-end

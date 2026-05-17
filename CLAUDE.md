@@ -5,15 +5,15 @@
 | Phase | Statut |
 |---|---|
 | 1. Cadrage & décisions (Spring) | ✅ Terminé |
-| 2. Structure du projet Spring Boot + React | ⬜ À faire |
-| 3. Modèle de données & JPA entities | ⬜ À faire |
-| 4. API REST — portfolio (CRUD) | ⬜ À faire |
-| 5. API REST — données financières (Yahoo Finance) | ⬜ À faire |
-| 6. Authentification Spring Security + JWT | ⬜ À faire |
-| 7. Frontend React | ⬜ À faire |
-| 8. Analyse fondamentale | ⬜ À faire |
+| 2. Structure du projet Spring Boot + React | ✅ Terminé |
+| 3. Modèle de données & JPA entities | ✅ Terminé |
+| 4. API REST — portfolio (CRUD) | ✅ Terminé |
+| 5. API REST — données financières (Yahoo Finance) | ✅ Terminé |
+| 6. Authentification Spring Security + JWT | ✅ Terminé |
+| 7. Frontend React | ✅ Terminé |
+| 8. Analyse fondamentale | ✅ Terminé |
 | 9. Screener & alertes | ⬜ À faire |
-| 10. Tests & déploiement Render | ⬜ À faire |
+| 10. Tests & déploiement Render | ✅ Terminé |
 
 ---
 

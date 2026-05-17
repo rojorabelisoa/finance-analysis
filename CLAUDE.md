@@ -4,64 +4,71 @@
 
 | Phase | Statut |
 |---|---|
-| 1. Cadrage & décisions | ✅ Terminé |
-| 2. Architecture & structure du projet | ✅ Décidée |
-| 3. Implémentation — modèle de données & portfolio | ✅ Terminé |
-| 4. Implémentation — analyse fondamentale | ⬜ À faire |
-| 5. Implémentation — screener | ⬜ À faire |
-| 6. Implémentation — alertes & rapports | ⬜ À faire |
-| 7. Tests & validation | ⬜ À faire |
-| 8. Déploiement sur Streamlit Cloud | ⬜ À faire |
+| 1. Cadrage & décisions (Spring) | ✅ Terminé |
+| 2. Structure du projet Spring Boot + React | ⬜ À faire |
+| 3. Modèle de données & JPA entities | ⬜ À faire |
+| 4. API REST — portfolio (CRUD) | ⬜ À faire |
+| 5. API REST — données financières (Yahoo Finance) | ⬜ À faire |
+| 6. Authentification Spring Security + JWT | ⬜ À faire |
+| 7. Frontend React | ⬜ À faire |
+| 8. Analyse fondamentale | ⬜ À faire |
+| 9. Screener & alertes | ⬜ À faire |
+| 10. Tests & déploiement Render | ⬜ À faire |
 
 ---
 
 ## Décisions prises
 
 ### Application & déploiement
-- **Type** : Application web dashboard
-- **Framework** : [Streamlit](https://streamlit.io/) — UI Python-native, pas de JS requis
-- **Hébergement** : Streamlit Community Cloud (gratuit, déploiement depuis GitHub)
-- **Utilisateurs** : Single user — pas d'authentification
+- **Backend** : Spring Boot 3.x (Java 21, Maven)
+- **Frontend** : React — build servi directement par Spring Boot (un seul déploiement)
+- **Hébergement** : Render (free tier) — un seul service, pas de CORS à gérer
+- **Auth** : Spring Security + JWT
 
 ### Stack technique
 ```
-Python
-├── streamlit          → UI / dashboard
-├── yfinance           → données financières (gratuit, Yahoo Finance)
-├── pandas             → manipulation des données
-├── plotly             → graphiques interactifs
-└── json / csv         → persistance du portefeuille (fichiers dans le repo)
+Backend (Java 21)
+├── Spring Boot 3.x        → framework principal
+├── Spring Web             → API REST
+├── Spring Security        → authentification + autorisation
+├── Spring Data JPA        → accès base de données
+├── PostgreSQL             → persistance (Render free tier)
+├── jjwt                   → génération et validation des tokens JWT
+└── WebClient (WebFlux)    → appels HTTP vers Yahoo Finance
+
+Frontend (React)
+├── React 18               → UI
+├── React Router           → navigation
+├── Axios                  → appels API REST
+├── Recharts               → graphiques
+└── Tailwind CSS           → styles
 ```
 
 ### Actifs & marchés
 - **Actifs** : Actions (stocks) + ETF / Fonds indiciels
 - **Marchés** : USA (NYSE/NASDAQ), Europe (Euronext, Xetra), Monde (via ETF)
-- **Devise de référence** : EUR — les montants USD/autres sont convertis automatiquement
+- **Devise de référence** : EUR — conversion automatique
 
 ### Stratégies d'investissement ciblées
 - **Indiciel / Buy & Hold** : contributions régulières sur ETF diversifiés
 - **Value investing** : P/E bas, décote sur valeur intrinsèque
 - **Croissance (Growth)** : forte croissance CA/BPA
 
-### Source de données
-- **yfinance** — gratuit, données différées (suffisant pour long terme)
-- Taux de change EUR/USD récupérés via yfinance également
+### Source de données financières
+- **Yahoo Finance (non officiel)** — illimité, gratuit, via WebClient
+- Recherche par **ticker** ou **ISIN**
+- Taux de change EUR/USD inclus
 
-### Persistance des données
-- **GitHub API** — lecture et écriture via l'API GitHub (`PUT /contents/`)
-- Chaque ajout/suppression crée un commit automatique dans le repo
-- `data/portfolio.json` et `data/watchlist.json` restent la source de vérité
-- Token configuré dans Streamlit Secrets (`GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`)
-- Même comportement en local et sur Streamlit Cloud
+### Persistance
+- **PostgreSQL** sur Render (free tier, 1GB)
+- Entités JPA : `User`, `Position`, `Watchlist`
 
 ### Fonctionnalités (ordre de priorité)
-1. **Suivi de portefeuille** — positions, prix d'achat, P&L, allocation par actif/secteur/géo
-2. **Analyse fondamentale** — P/E, PEG, EPS growth, dividendes, bilan simplifié
-3. **Screener / Filtres** — critères value/growth/dividendes sur un univers configurable
-4. **Alertes & rapports** — objectifs de prix et rééquilibrage affichés dans l'UI (pas d'email)
-
-### Refresh des données
-- **À la demande** — bouton "Rafraîchir" dans l'UI (pas de scheduler, compatible free tier)
+1. **Auth** — inscription/login, JWT
+2. **Suivi de portefeuille** — positions, P&L, allocation
+3. **Analyse fondamentale** — P/E, PEG, dividendes, graphique historique
+4. **Screener** — filtres value/growth/dividendes
+5. **Alertes** — objectifs de prix, rééquilibrage
 
 ---
 
@@ -69,63 +76,82 @@ Python
 
 ```
 finance-analysis/
-├── app.py                  → point d'entrée Streamlit (navigation entre pages)
-├── requirements.txt        → dépendances Python
-├── .streamlit/
-│   └── config.toml         → thème et config Streamlit
-├── data/
-│   ├── portfolio.json      → positions du portefeuille (persisté)
-│   └── watchlist.json      → liste de surveillance (persisté)
-├── pages/
-│   ├── 1_Portfolio.py      → vue portefeuille (P&L, allocation, historique)
-│   ├── 2_Analyse.py        → analyse fondamentale d'un titre
-│   ├── 3_Screener.py       → filtres et découverte d'actions
-│   └── 4_Alertes.py        → objectifs de prix et rééquilibrage
-└── src/
-    ├── data_fetcher.py     → wrapper yfinance (cours, fondamentaux, FX)
-    ├── portfolio.py        → lecture/écriture portfolio.json, calculs P&L
-    ├── screener.py         → logique de filtrage
-    └── utils.py            → conversions devise, formatage
+├── pom.xml                          → dépendances Maven
+├── Dockerfile                       → build pour Render
+├── src/main/
+│   ├── java/com/rojorabelisoa/finance/
+│   │   ├── FinanceApplication.java
+│   │   ├── config/
+│   │   │   ├── SecurityConfig.java  → Spring Security + JWT filter
+│   │   │   └── WebClientConfig.java → Yahoo Finance client
+│   │   ├── auth/
+│   │   │   ├── AuthController.java  → POST /api/auth/register, /login
+│   │   │   ├── AuthService.java
+│   │   │   ├── JwtService.java
+│   │   │   └── dto/                 → LoginRequest, RegisterRequest, TokenResponse
+│   │   ├── portfolio/
+│   │   │   ├── PositionController.java  → GET/POST/DELETE /api/positions
+│   │   │   ├── PositionService.java
+│   │   │   ├── PositionRepository.java
+│   │   │   └── Position.java            → entité JPA
+│   │   ├── market/
+│   │   │   ├── MarketController.java    → GET /api/market/quote/{ticker}
+│   │   │   ├── MarketService.java       → appels Yahoo Finance
+│   │   │   └── dto/                     → QuoteDto, FundamentalsDto
+│   │   └── user/
+│   │       ├── User.java                → entité JPA
+│   │       └── UserRepository.java
+│   └── resources/
+│       ├── application.properties       → config DB, JWT secret
+│       └── static/                      → build React (généré)
+└── frontend/
+    ├── package.json
+    ├── src/
+    │   ├── App.jsx
+    │   ├── pages/
+    │   │   ├── Login.jsx
+    │   │   ├── Portfolio.jsx
+    │   │   ├── Analyse.jsx
+    │   │   └── Screener.jsx
+    │   ├── components/
+    │   └── services/
+    │       └── api.js                   → Axios + intercepteur JWT
+    └── public/
 ```
 
 ---
 
-## Configuration Streamlit Secrets
+## Variables d'environnement (Render)
 
-Pour que l'app fonctionne (local ou Cloud), créer `.streamlit/secrets.toml` :
-
-```toml
-GITHUB_TOKEN  = "ghp_xxxxxxxxxxxx"   # Personal Access Token (scope: repo)
-GITHUB_REPO   = "rojorabelisoa/finance-analysis"
-GITHUB_BRANCH = "main"
 ```
-
-Sur Streamlit Cloud : App Settings → Secrets (coller le contenu directement).
+DATABASE_URL   = postgresql://user:pass@host/dbname
+JWT_SECRET     = une_chaine_aleatoire_longue
+```
 
 ---
 
 ## Questions ouvertes
 
-- [ ] Liste des métriques fondamentales à afficher en priorité (P/E, PEG, dividende…)
-- [ ] Univers par défaut du screener (S&P 500 ? CAC 40 ? Les deux ?)
-- [ ] Souhait d'un graphique d'évolution historique du portefeuille sur la page principale ?
+- [ ] Métriques fondamentales prioritaires à afficher (P/E, PEG, dividende…)
+- [ ] Univers du screener (S&P 500, CAC 40, les deux ?)
+- [ ] Graphique d'évolution historique du portefeuille sur la page principale ?
 
 ---
 
 ## Journal des sessions
 
-### 2026-05-16 — Session 2 : Implémentation phase 3
-- Persistance via GitHub API (lecture/écriture directe, crée un commit par modification)
-- Fichiers créés : `app.py`, `src/portfolio.py`, `src/data_fetcher.py`, `src/utils.py`
-- Pages créées : `1_Portfolio.py` (complet), `2_Analyse`, `3_Screener`, `4_Alertes` (stubs)
-- Format `portfolio.json` défini : positions avec id, ticker, type, marché, shares, avg_price, currency, buy_date
-- Prochaine étape : analyse fondamentale (phase 4)
+### 2026-05-17 — Session 3 : Pivot vers Spring Boot + React
+- Décision de remplacer Streamlit/Python par Spring Boot 3 (Java 21, Maven) + React
+- Source de données : Yahoo Finance non officiel (illimité) au lieu d'Alpha Vantage (25 req/jour)
+- Frontend React inclus dans le build Spring Boot (un seul déploiement sur Render)
+- Auth : Spring Security + JWT
+- BDD : PostgreSQL sur Render free tier
+- Architecture complète définie, prête pour implémentation
 
-### 2026-05-16 — Session 1 : Cadrage & architecture
-- Définition complète du besoin via questionnaire
-- Stack retenue : Streamlit + yfinance + Pandas + Plotly
-- Déploiement : Streamlit Community Cloud (gratuit, depuis GitHub)
-- Persistance : JSON dans le repo, versionné avec git
-- Devise : EUR (conversion auto USD→EUR via yfinance)
-- Architecture du projet définie (arborescence complète)
-- Prochain jalon : implémenter la structure de base et le suivi de portefeuille
+### 2026-05-16 — Session 2 : Version Streamlit (archivée)
+- Prototype fonctionnel déployé sur Streamlit Cloud
+- Persistance via GitHub API, recherche par ticker et ISIN
+- Remplacé par la version Spring Boot
+
+### 2026-05-16 — Session 1 : Cadrage initial
+- Stack Streamlit + Python définie (remplacée en session 3)

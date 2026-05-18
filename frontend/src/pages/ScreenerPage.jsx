@@ -51,7 +51,7 @@ export default function ScreenerPage() {
 
       <Card>
         <p className="text-xs text-gray-500 mb-4">Premier chargement ~10-15s (données mises en cache 5 min)</p>
-        <div className="flex flex-wrap gap-4 items-end">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
             <label className="text-xs text-gray-400 block mb-1">P/E max</label>
             <input
@@ -59,7 +59,7 @@ export default function ScreenerPage() {
               value={filters.peMax}
               onChange={(e) => setFilters((f) => ({ ...f, peMax: e.target.value }))}
               placeholder="ex: 25"
-              className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm w-28 focus:outline-none focus:border-emerald-500"
+              className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm w-full focus:outline-none focus:border-emerald-500"
             />
           </div>
           <div>
@@ -69,7 +69,7 @@ export default function ScreenerPage() {
               value={filters.revenueGrowthMin}
               onChange={(e) => setFilters((f) => ({ ...f, revenueGrowthMin: e.target.value }))}
               placeholder="ex: 5"
-              className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm w-32 focus:outline-none focus:border-emerald-500"
+              className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm w-full focus:outline-none focus:border-emerald-500"
             />
           </div>
           <div>
@@ -79,7 +79,7 @@ export default function ScreenerPage() {
               value={filters.epsGrowthMin}
               onChange={(e) => setFilters((f) => ({ ...f, epsGrowthMin: e.target.value }))}
               placeholder="ex: 5"
-              className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm w-32 focus:outline-none focus:border-emerald-500"
+              className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm w-full focus:outline-none focus:border-emerald-500"
             />
           </div>
           <button
@@ -119,25 +119,25 @@ export default function ScreenerPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-gray-500 border-b border-gray-700">
-                  <th className="pb-2 pr-4">Ticker</th>
-                  <th className="pb-2 pr-4">Nom</th>
-                  <th className="pb-2 pr-4 text-right">Prix</th>
-                  <th className="pb-2 pr-4 text-right">P/E</th>
-                  <th className="pb-2 pr-4 text-right">Croiss. CA</th>
-                  <th className="pb-2 pr-4 text-right">Croiss. BPA</th>
-                  <th className="pb-2 text-right">Market Cap</th>
+                  <th className="pb-2 pr-4 whitespace-nowrap">Ticker</th>
+                  <th className="pb-2 pr-4 whitespace-nowrap">Nom</th>
+                  <th className="pb-2 pr-4 text-right whitespace-nowrap">Prix</th>
+                  <th className="pb-2 pr-4 text-right whitespace-nowrap">P/E</th>
+                  <th className="pb-2 pr-4 text-right whitespace-nowrap">Croiss. CA</th>
+                  <th className="pb-2 pr-4 text-right whitespace-nowrap">Croiss. BPA</th>
+                  <th className="pb-2 text-right whitespace-nowrap">Market Cap</th>
                 </tr>
               </thead>
               <tbody>
                 {results.content.map((r) => (
                   <tr key={r.ticker} className="border-b border-gray-800 hover:bg-gray-800/50">
-                    <td className="py-2 pr-4 font-mono text-emerald-400 font-semibold">{r.ticker}</td>
+                    <td className="py-2 pr-4 font-mono text-emerald-400 font-semibold whitespace-nowrap">{r.ticker}</td>
                     <td className="py-2 pr-4 text-gray-300 truncate max-w-[180px]">{r.name || '—'}</td>
-                    <td className="py-2 pr-4 text-right text-gray-200">{r.price != null ? `${fmt(r.price)} ${r.currency || ''}` : '—'}</td>
-                    <td className="py-2 pr-4 text-right text-gray-200">{fmt(r.peRatio)}</td>
-                    <td className="py-2 pr-4 text-right">{fmtPct(r.revenueGrowth)}</td>
-                    <td className="py-2 pr-4 text-right">{fmtPct(r.epsGrowth)}</td>
-                    <td className="py-2 text-right text-gray-400">{fmtCap(r.marketCap)}</td>
+                    <td className="py-2 pr-4 text-right text-gray-200 whitespace-nowrap">{r.price != null ? `${fmt(r.price)} ${r.currency || ''}` : '—'}</td>
+                    <td className="py-2 pr-4 text-right text-gray-200 whitespace-nowrap">{fmt(r.peRatio)}</td>
+                    <td className="py-2 pr-4 text-right whitespace-nowrap">{fmtPct(r.revenueGrowth)}</td>
+                    <td className="py-2 pr-4 text-right whitespace-nowrap">{fmtPct(r.epsGrowth)}</td>
+                    <td className="py-2 text-right text-gray-400 whitespace-nowrap">{fmtCap(r.marketCap)}</td>
                   </tr>
                 ))}
                 {results.content.length === 0 && (

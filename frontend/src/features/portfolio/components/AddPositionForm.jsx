@@ -174,7 +174,7 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
         {/* Champs auto-remplis — visibles dès qu'on a un ticker */}
         {form.ticker && !fundamentalsLoading && (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Ticker</label>
                 <input name="ticker" value={form.ticker} onChange={handleChange} className={inputCls} required />
@@ -219,7 +219,7 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
                 <label className={labelCls}>Prix moyen d'achat</label>
                 <input type="number" name="avgPrice" value={form.avgPrice} onChange={handleChange} placeholder="ex: 150.50" min="0" step="any" className={inputCls} required />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <label className={labelCls}>Date d'achat</label>
                 <input type="date" name="buyDate" value={form.buyDate} onChange={handleChange} className={inputCls} />
               </div>

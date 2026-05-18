@@ -43,6 +43,30 @@ export default function Navbar() {
             >
               Analyse
             </NavLink>
+            <NavLink
+              to="/screener"
+              className={({ isActive }) =>
+                `px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                }`
+              }
+            >
+              Screener
+            </NavLink>
+            <NavLink
+              to="/alerts"
+              className={({ isActive }) =>
+                `px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                }`
+              }
+            >
+              Alertes
+            </NavLink>
           </div>
         </div>
         <div className="flex items-center gap-3">

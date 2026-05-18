@@ -7,6 +7,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import PortfolioPage from './pages/PortfolioPage'
 import AnalysePage from './pages/AnalysePage'
+import ScreenerPage from './pages/ScreenerPage'
+import AlertsPage from './pages/AlertsPage'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token')
@@ -55,6 +57,26 @@ export default function App() {
               }
             >
               <Route index element={<AnalysePage />} />
+            </Route>
+            <Route
+              path="/screener"
+              element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<ScreenerPage />} />
+            </Route>
+            <Route
+              path="/alerts"
+              element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<AlertsPage />} />
             </Route>
           </Routes>
         </PortfolioProvider>

@@ -21,33 +21,26 @@ public class MarketService {
     public QuoteDto getQuote(String ticker) {
         try {
             Map<?, ?> body = yahooClient.get()
-                    .uri("/v8/finance/chart/{ticker}?interval=1d&range=1d", ticker)
+                    .uri("/v7/finance/quote?symbols={ticker}", ticker)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
 
             if (body == null) return emptyQuote(ticker);
-
-            Map<?, ?> chart = (Map<?, ?>) body.get("chart");
-            if (chart == null) return emptyQuote(ticker);
-
-            List<?> results = (List<?>) chart.get("result");
+            Map<?, ?> quoteResponse = (Map<?, ?>) body.get("quoteResponse");
+            if (quoteResponse == null) return emptyQuote(ticker);
+            List<?> results = (List<?>) quoteResponse.get("result");
             if (results == null || results.isEmpty()) return emptyQuote(ticker);
 
-            Map<?, ?> result = (Map<?, ?>) results.get(0);
-            Map<?, ?> meta = (Map<?, ?>) result.get("meta");
-            if (meta == null) return emptyQuote(ticker);
-
-            Double price = toDouble(meta.get("regularMarketPrice"));
-            String currency = (String) meta.get("currency");
-            String symbol = (String) meta.get("symbol");
-            String name = (String) meta.get("longName");
-            Double changePercent = toDouble(meta.get("regularMarketChangePercent"));
-            Double change = price != null && changePercent != null
-                    ? price - price / (1 + changePercent / 100)
-                    : null;
-            Long volume = toLong(meta.get("regularMarketVolume"));
-            Long marketCap = toLong(meta.get("marketCap"));
+            Map<?, ?> q = (Map<?, ?>) results.get(0);
+            String symbol = (String) q.get("symbol");
+            String name = q.get("longName") != null ? (String) q.get("longName") : (String) q.get("shortName");
+            Double price = toDouble(q.get("regularMarketPrice"));
+            String currency = (String) q.get("currency");
+            Double change = toDouble(q.get("regularMarketChange"));
+            Double changePercent = toDouble(q.get("regularMarketChangePercent"));
+            Long volume = toLong(q.get("regularMarketVolume"));
+            Long marketCap = toLong(q.get("marketCap"));
 
             return new QuoteDto(symbol, name, price, currency, change, changePercent, volume, marketCap);
         } catch (Exception e) {
@@ -58,56 +51,64 @@ public class MarketService {
     @Cacheable("fundamentals")
     public FundamentalsDto getFundamentals(String ticker) {
         try {
+            // Données principales via v7/finance/quote (fiable, flat JSON)
             Map<?, ?> body = yahooClient.get()
-                    .uri("/v10/finance/quoteSummary/{ticker}?modules=summaryDetail,defaultKeyStatistics,financialData,assetProfile,quoteType", ticker)
+                    .uri("/v7/finance/quote?symbols={ticker}", ticker)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
 
             if (body == null) return emptyFundamentals(ticker);
-
-            Map<?, ?> quoteSummary = (Map<?, ?>) body.get("quoteSummary");
-            if (quoteSummary == null) return emptyFundamentals(ticker);
-
-            List<?> results = (List<?>) quoteSummary.get("result");
+            Map<?, ?> quoteResponse = (Map<?, ?>) body.get("quoteResponse");
+            if (quoteResponse == null) return emptyFundamentals(ticker);
+            List<?> results = (List<?>) quoteResponse.get("result");
             if (results == null || results.isEmpty()) return emptyFundamentals(ticker);
 
-            Map<?, ?> result = (Map<?, ?>) results.get(0);
+            Map<?, ?> q = (Map<?, ?>) results.get(0);
 
-            Map<?, ?> summaryDetail = (Map<?, ?>) result.get("summaryDetail");
-            Map<?, ?> keyStats = (Map<?, ?>) result.get("defaultKeyStatistics");
-            Map<?, ?> financialData = (Map<?, ?>) result.get("financialData");
-            Map<?, ?> assetProfile = (Map<?, ?>) result.get("assetProfile");
-            Map<?, ?> quoteTypeModule = (Map<?, ?>) result.get("quoteType");
+            String name = q.get("longName") != null ? (String) q.get("longName") : (String) q.get("shortName");
+            String sector = (String) q.get("sector");
+            String industry = (String) q.get("industry");
+            String currency = (String) q.get("currency");
+            String quoteType = (String) q.get("quoteType");
 
-            Double trailingPe = extractRaw(summaryDetail, "trailingPE");
-            Double forwardPe = extractRaw(summaryDetail, "forwardPE");
-            Double dividendYield = extractRaw(summaryDetail, "dividendYield");
-            Double week52High = extractRaw(summaryDetail, "fiftyTwoWeekHigh");
-            Double week52Low = extractRaw(summaryDetail, "fiftyTwoWeekLow");
-            Long marketCap = extractRawLong(summaryDetail, "marketCap");
+            Double trailingPe = toDouble(q.get("trailingPE"));
+            Double forwardPe = toDouble(q.get("forwardPE"));
+            Double pegRatio = toDouble(q.get("pegRatio"));
+            Double eps = toDouble(q.get("epsTrailingTwelveMonths"));
+            Double epsGrowth = toDouble(q.get("earningsGrowth"));
+            Double revenueGrowth = toDouble(q.get("revenueGrowth"));
+            Double dividendYield = toDouble(q.get("dividendYield"));
+            Double week52High = toDouble(q.get("fiftyTwoWeekHigh"));
+            Double week52Low = toDouble(q.get("fiftyTwoWeekLow"));
+            Long marketCap = toLong(q.get("marketCap"));
 
-            Double pegRatio = extractRaw(keyStats, "pegRatio");
-            Double eps = extractRaw(keyStats, "trailingEps");
-            Double epsGrowth = extractRaw(keyStats, "earningsGrowth");
-            Double revenueGrowth = extractRaw(financialData, "revenueGrowth");
-
-            String name = assetProfile != null ? (String) assetProfile.get("longName") : null;
-            String sector = assetProfile != null ? (String) assetProfile.get("sector") : null;
-            String industry = assetProfile != null ? (String) assetProfile.get("industry") : null;
-            String description = assetProfile != null ? (String) assetProfile.get("longBusinessSummary") : null;
-
-            String currency = summaryDetail != null ? (String) summaryDetail.get("currency") : null;
-
-            String rawQuoteType = quoteTypeModule != null ? (String) quoteTypeModule.get("quoteType") : "EQUITY";
-            String type = deriveType(rawQuoteType);
+            String type = deriveType(quoteType);
             String market = deriveMarket(currency);
 
-            return new FundamentalsDto(
-                    ticker, name, sector, industry, currency, marketCap,
+            // Description via quoteSummary (optionnel, ne bloque pas si échoue)
+            String description = null;
+            try {
+                Map<?, ?> summaryBody = yahooClient.get()
+                        .uri("/v10/finance/quoteSummary/{ticker}?modules=assetProfile", ticker)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                if (summaryBody != null) {
+                    Map<?, ?> qs = (Map<?, ?>) summaryBody.get("quoteSummary");
+                    if (qs != null) {
+                        List<?> sr = (List<?>) qs.get("result");
+                        if (sr != null && !sr.isEmpty()) {
+                            Map<?, ?> ap = (Map<?, ?>) ((Map<?, ?>) sr.get(0)).get("assetProfile");
+                            if (ap != null) description = (String) ap.get("longBusinessSummary");
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            return new FundamentalsDto(ticker, name, sector, industry, currency, marketCap,
                     trailingPe, forwardPe, pegRatio, eps, epsGrowth, revenueGrowth,
-                    dividendYield, week52High, week52Low, type, market, description
-            );
+                    dividendYield, week52High, week52Low, type, market, description);
         } catch (Exception e) {
             return emptyFundamentals(ticker);
         }
@@ -211,20 +212,6 @@ public class MarketService {
         if (value == null) return null;
         if (value instanceof Number n) return n.longValue();
         return null;
-    }
-
-    private Double extractRaw(Map<?, ?> module, String key) {
-        if (module == null) return null;
-        Object field = module.get(key);
-        if (field instanceof Map<?, ?> m) return toDouble(m.get("raw"));
-        return toDouble(field);
-    }
-
-    private Long extractRawLong(Map<?, ?> module, String key) {
-        if (module == null) return null;
-        Object field = module.get(key);
-        if (field instanceof Map<?, ?> m) return toLong(m.get("raw"));
-        return toLong(field);
     }
 
     private String deriveType(String quoteType) {

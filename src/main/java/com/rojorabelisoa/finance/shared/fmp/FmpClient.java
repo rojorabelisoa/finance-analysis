@@ -75,8 +75,12 @@ public class FmpClient {
                 .build();
 
         var response = http.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != 200) {
-            throw new RuntimeException("HTTP " + response.statusCode() + " — " + response.body().substring(0, Math.min(100, response.body().length())));
+        int status = response.statusCode();
+
+        // 404 with empty body = ticker not found — not an error
+        if (status == 404) return "[]";
+        if (status != 200) {
+            throw new RuntimeException("HTTP " + status + " — " + response.body().substring(0, Math.min(150, response.body().length())));
         }
         return response.body();
     }

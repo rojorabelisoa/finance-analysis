@@ -47,7 +47,9 @@ public class MarketController {
     @GetMapping("/debug/{ticker}")
     public ResponseEntity<Map<String, Object>> debug(@PathVariable String ticker) {
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("fmp_quote_raw", fmp.rawGet("/v3/quote/" + ticker));
+        result.put("ticker", ticker);
+        result.put("quote_raw", fmp.rawGet("/quote?symbol=" + ticker));
+        result.put("profile_raw", fmp.rawGet("/profile?symbol=" + ticker));
         result.put("quote_parsed", marketService.getQuote(ticker));
         return ResponseEntity.ok(result);
     }

@@ -64,9 +64,13 @@ public class ScreenerService {
 
     private List<ScreenerResultDto> fetchBatch(List<String> tickers) {
         try {
-            // stable: /quote?symbol=AAPL,MSFT,...
+            // /quote works for US stocks (S&P 500); returns [] for non-US
             String symbols = String.join(",", tickers);
             List<?> results = fmp.getList("/quote?symbol=" + symbols);
+            if (results == null || results.isEmpty()) {
+                // fallback: profile (slower but works for all)
+                results = fmp.getList("/profile?symbol=" + symbols);
+            }
             if (results == null) return List.of();
 
             return results.stream()
@@ -74,12 +78,13 @@ public class ScreenerService {
                     .map(r -> (Map<?, ?>) r)
                     .map(r -> new ScreenerResultDto(
                             str(r, "symbol"),
-                            str(r, "name"),
+                            // /quote uses "name", /profile uses "companyName"
+                            str(r, "name") != null ? str(r, "name") : str(r, "companyName"),
                             toDouble(r.get("price")),
                             str(r, "currency"),
                             toDouble(r.get("pe")),
-                            null,  // revenueGrowth not in batch quote — needs separate call
-                            null,  // epsGrowth not in batch quote
+                            null,
+                            null,
                             toLong(r.get("marketCap"))
                     ))
                     .collect(Collectors.toList());

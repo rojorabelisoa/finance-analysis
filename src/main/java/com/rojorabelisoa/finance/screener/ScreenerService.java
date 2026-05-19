@@ -1,13 +1,12 @@
 package com.rojorabelisoa.finance.screener;
 
 import com.rojorabelisoa.finance.screener.dto.ScreenerResultDto;
+import com.rojorabelisoa.finance.shared.yahoo.YahooFinanceClient;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,12 +17,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ScreenerService {
 
-    private static final Logger log = LoggerFactory.getLogger(ScreenerService.class);
     private static final int BATCH_SIZE = 100;
 
-    private final WebClient yahooClient;
+    private final YahooFinanceClient yahoo;
 
     @Cacheable(value = "screener", key = "'all'")
     public List<ScreenerResultDto> fetchAll() {
@@ -67,11 +66,8 @@ public class ScreenerService {
     private List<ScreenerResultDto> fetchBatch(List<String> tickers) {
         try {
             String symbols = String.join(",", tickers);
-            Map<?, ?> body = yahooClient.get()
-                    .uri("/v7/finance/quote?symbols={symbols}&fields=shortName,regularMarketPrice,trailingPE,revenueGrowth,earningsGrowth,marketCap,currency", symbols)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
+            Map<?, ?> body = yahoo.get(
+                    "/v7/finance/quote?symbols=" + symbols + "&fields=shortName,regularMarketPrice,trailingPE,revenueGrowth,earningsGrowth,marketCap,currency");
 
             if (body == null) return List.of();
             Map<?, ?> quoteResponse = (Map<?, ?>) body.get("quoteResponse");

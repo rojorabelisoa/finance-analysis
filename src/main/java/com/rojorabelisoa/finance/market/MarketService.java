@@ -3,11 +3,13 @@ package com.rojorabelisoa.finance.market;
 import com.rojorabelisoa.finance.market.dto.FundamentalsDto;
 import com.rojorabelisoa.finance.market.dto.QuoteDto;
 import com.rojorabelisoa.finance.market.dto.SearchResultDto;
+import com.rojorabelisoa.finance.shared.yahoo.YahooFinanceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -15,18 +17,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MarketService {
 
-    private final WebClient yahooClient;
+    private final YahooFinanceClient yahoo;
 
     @Cacheable("quotes")
     public QuoteDto getQuote(String ticker) {
         try {
-            Map<?, ?> body = yahooClient.get()
-                    .uri("/v7/finance/quote?symbols={ticker}", ticker)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
-
+            Map<?, ?> body = yahoo.get("/v7/finance/quote?symbols=" + encode(ticker));
             if (body == null) return emptyQuote(ticker);
+
             Map<?, ?> quoteResponse = (Map<?, ?>) body.get("quoteResponse");
             if (quoteResponse == null) return emptyQuote(ticker);
             List<?> results = (List<?>) quoteResponse.get("result");
@@ -51,14 +49,9 @@ public class MarketService {
     @Cacheable("fundamentals")
     public FundamentalsDto getFundamentals(String ticker) {
         try {
-            // Données principales via v7/finance/quote (fiable, flat JSON)
-            Map<?, ?> body = yahooClient.get()
-                    .uri("/v7/finance/quote?symbols={ticker}", ticker)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
-
+            Map<?, ?> body = yahoo.get("/v7/finance/quote?symbols=" + encode(ticker));
             if (body == null) return emptyFundamentals(ticker);
+
             Map<?, ?> quoteResponse = (Map<?, ?>) body.get("quoteResponse");
             if (quoteResponse == null) return emptyFundamentals(ticker);
             List<?> results = (List<?>) quoteResponse.get("result");
@@ -86,14 +79,9 @@ public class MarketService {
             String type = deriveType(quoteType);
             String market = deriveMarket(currency);
 
-            // Description via quoteSummary (optionnel, ne bloque pas si échoue)
             String description = null;
             try {
-                Map<?, ?> summaryBody = yahooClient.get()
-                        .uri("/v10/finance/quoteSummary/{ticker}?modules=assetProfile", ticker)
-                        .retrieve()
-                        .bodyToMono(Map.class)
-                        .block();
+                Map<?, ?> summaryBody = yahoo.get("/v10/finance/quoteSummary/" + ticker + "?modules=assetProfile");
                 if (summaryBody != null) {
                     Map<?, ?> qs = (Map<?, ?>) summaryBody.get("quoteSummary");
                     if (qs != null) {
@@ -117,19 +105,14 @@ public class MarketService {
     @Cacheable("search")
     public List<SearchResultDto> searchSuggestions(String query) {
         try {
-            // Si ISIN, résoudre d'abord
             String searchQuery = query;
             if (query.matches("[A-Z]{2}[A-Z0-9]{10}")) {
                 String resolved = resolveIsin(query);
                 if (resolved != null) searchQuery = resolved;
             }
 
-            Map<?, ?> body = yahooClient.get()
-                    .uri("/v1/finance/search?q={q}&quotesCount=8&newsCount=0&enableFuzzyQuery=true", searchQuery)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
-
+            Map<?, ?> body = yahoo.get(
+                    "/v1/finance/search?q=" + encode(searchQuery) + "&quotesCount=8&newsCount=0&enableFuzzyQuery=true");
             if (body == null) return List.of();
 
             List<?> quotes = (List<?>) body.get("quotes");
@@ -139,17 +122,16 @@ public class MarketService {
                     .filter(q -> q instanceof Map<?, ?>)
                     .map(q -> (Map<?, ?>) q)
                     .filter(q -> {
-                        String type = (String) ((Map<?, ?>) q).get("quoteType");
+                        String type = (String) q.get("quoteType");
                         return type != null && (type.equals("EQUITY") || type.equals("ETF") || type.equals("MUTUALFUND"));
                     })
                     .map(q -> {
-                        Map<?, ?> m = (Map<?, ?>) q;
-                        String name = m.get("longname") != null ? (String) m.get("longname") : (String) m.get("shortname");
+                        String name = q.get("longname") != null ? (String) q.get("longname") : (String) q.get("shortname");
                         return new SearchResultDto(
-                                (String) m.get("symbol"),
+                                (String) q.get("symbol"),
                                 name != null ? name : "",
-                                deriveType((String) m.get("quoteType")),
-                                (String) m.get("exchange")
+                                deriveType((String) q.get("quoteType")),
+                                (String) q.get("exchange")
                         );
                     })
                     .limit(6)
@@ -162,29 +144,14 @@ public class MarketService {
     @Cacheable("search")
     public String resolveIsin(String isin) {
         try {
-            Map<?, ?> body = yahooClient.get()
-                    .uri("/v1/finance/search?q={isin}&quotesCount=1&newsCount=0&enableFuzzyQuery=false", isin)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .block();
-
+            Map<?, ?> body = yahoo.get(
+                    "/v1/finance/search?q=" + encode(isin) + "&quotesCount=1&newsCount=0&enableFuzzyQuery=false");
             if (body == null) return null;
-
-            Map<?, ?> finance = (Map<?, ?>) body.get("finance");
-            if (finance != null) {
-                List<?> results = (List<?>) finance.get("result");
-                if (results != null && !results.isEmpty()) {
-                    Map<?, ?> first = (Map<?, ?>) results.get(0);
-                    return (String) first.get("symbol");
-                }
-            }
 
             List<?> quotes = (List<?>) body.get("quotes");
             if (quotes != null && !quotes.isEmpty()) {
-                Map<?, ?> first = (Map<?, ?>) quotes.get(0);
-                return (String) first.get("symbol");
+                return (String) ((Map<?, ?>) quotes.get(0)).get("symbol");
             }
-
             return null;
         } catch (Exception e) {
             return null;
@@ -202,14 +169,16 @@ public class MarketService {
         }
     }
 
+    private String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
     private Double toDouble(Object value) {
-        if (value == null) return null;
         if (value instanceof Number n) return n.doubleValue();
         return null;
     }
 
     private Long toLong(Object value) {
-        if (value == null) return null;
         if (value instanceof Number n) return n.longValue();
         return null;
     }

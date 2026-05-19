@@ -16,3 +16,14 @@ venv/
 
 # OS
 .DS_Store
+
+# Java / Maven
+target/
+*.jar
+*.class
+
+# Node / frontend
+frontend/node_modules/
+frontend/node/
+frontend/dist/
+frontend/package-lock.json

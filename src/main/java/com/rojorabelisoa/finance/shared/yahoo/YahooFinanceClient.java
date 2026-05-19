@@ -63,6 +63,14 @@ public class YahooFinanceClient {
         }
     }
 
+    /** Raw string fetch for diagnostics (no JSON parsing, no crumb). */
+    public String rawGet(String path) {
+        try { return rawFetch(Q1 + path); } catch (Exception ignored) {}
+        try { return rawFetch(Q2 + path); } catch (Exception e) { return "ERROR: " + e.getMessage(); }
+    }
+
+    public String getCrumb() { return crumb; }
+
     /**
      * Fetch a Yahoo Finance path (starting with /). Tries query1 first, then query2.
      * Appends crumb automatically if available.

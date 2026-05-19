@@ -3,6 +3,7 @@ package com.rojorabelisoa.finance.market;
 import com.rojorabelisoa.finance.market.dto.FundamentalsDto;
 import com.rojorabelisoa.finance.market.dto.QuoteDto;
 import com.rojorabelisoa.finance.market.dto.SearchResultDto;
+import com.rojorabelisoa.finance.shared.yahoo.YahooFinanceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/market")
@@ -19,6 +22,7 @@ import java.util.List;
 public class MarketController {
 
     private final MarketService marketService;
+    private final YahooFinanceClient yahoo;
 
     @GetMapping("/quote/{ticker}")
     public ResponseEntity<QuoteDto> getQuote(@PathVariable String ticker) {
@@ -38,5 +42,14 @@ public class MarketController {
     @GetMapping("/fx")
     public ResponseEntity<Double> getFxRate(@RequestParam String from, @RequestParam String to) {
         return ResponseEntity.ok(marketService.getFxRate(from, to));
+    }
+
+    @GetMapping("/debug/{ticker}")
+    public ResponseEntity<Map<String, Object>> debug(@PathVariable String ticker) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("crumb", yahoo.getCrumb());
+        result.put("quote_raw", yahoo.rawGet("/v7/finance/quote?symbols=" + ticker));
+        result.put("quote_parsed", marketService.getQuote(ticker));
+        return ResponseEntity.ok(result);
     }
 }

@@ -19,7 +19,7 @@ public class MarketService {
 
     private final YahooFinanceClient yahoo;
 
-    @Cacheable("quotes")
+    @Cacheable(value = "quotes", unless = "#result.price() == null")
     public QuoteDto getQuote(String ticker) {
         try {
             Map<?, ?> body = yahoo.get("/v7/finance/quote?symbols=" + encode(ticker));
@@ -46,7 +46,7 @@ public class MarketService {
         }
     }
 
-    @Cacheable("fundamentals")
+    @Cacheable(value = "fundamentals", unless = "#result.name() == null")
     public FundamentalsDto getFundamentals(String ticker) {
         try {
             Map<?, ?> body = yahoo.get("/v7/finance/quote?symbols=" + encode(ticker));

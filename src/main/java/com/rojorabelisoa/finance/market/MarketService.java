@@ -26,13 +26,23 @@ public class MarketService {
             Map<?, ?> q = fmp.getFirst("/quote?symbol=" + encode(ticker));
             if (q == null) return emptyQuote(ticker);
 
+            // changesPercentage (v3) or priceChangePercentage (stable)
+            Double changePct = toDouble(q.get("changesPercentage"));
+            if (changePct == null) changePct = toDouble(q.get("priceChangePercentage"));
+            if (changePct == null) changePct = toDouble(q.get("changePercentage"));
+
+            // currency not always in quote — derive from ticker suffix
+            String currency = str(q, "currency");
+            if (currency == null) currency = str(q, "reportedCurrency");
+            if (currency == null) currency = deriveCurrency(ticker);
+
             return new QuoteDto(
                     str(q, "symbol"),
                     str(q, "name"),
                     toDouble(q.get("price")),
-                    str(q, "currency"),
+                    currency,
                     toDouble(q.get("change")),
-                    toDouble(q.get("changesPercentage")),
+                    changePct,
                     toLong(q.get("volume")),
                     toLong(q.get("marketCap"))
             );
@@ -55,7 +65,9 @@ public class MarketService {
             String sector = profile != null ? str(profile, "sector") : null;
             String industry = profile != null ? str(profile, "industry") : null;
             String currency = str(quote, "currency");
+            if (currency == null) currency = str(quote, "reportedCurrency");
             if (currency == null && profile != null) currency = str(profile, "currency");
+            if (currency == null) currency = deriveCurrency(ticker);
             String description = profile != null ? str(profile, "description") : null;
             boolean isEtf = profile != null && Boolean.TRUE.equals(profile.get("isEtf"));
             Long marketCap = toLong(quote.get("marketCap"));
@@ -162,6 +174,16 @@ public class MarketService {
     private Long toLong(Object value) {
         if (value instanceof Number n) return n.longValue();
         return null;
+    }
+
+    private String deriveCurrency(String ticker) {
+        if (ticker == null) return "USD";
+        String t = ticker.toUpperCase();
+        if (t.endsWith(".PA") || t.endsWith(".AS") || t.endsWith(".DE") ||
+            t.endsWith(".MI") || t.endsWith(".MC") || t.endsWith(".BR")) return "EUR";
+        if (t.endsWith(".L"))  return "GBP";
+        if (t.endsWith(".SW")) return "CHF";
+        return "USD";
     }
 
     private String deriveMarket(String currency) {

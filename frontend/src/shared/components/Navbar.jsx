@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Navbar() {
-  const { user, logout } = useAuth()
+  const { username: user, logout } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 

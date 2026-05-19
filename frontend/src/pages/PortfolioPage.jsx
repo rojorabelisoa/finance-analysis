@@ -8,11 +8,11 @@ import Card from '../shared/components/Card'
 
 function MetricCard({ label, value, sub, valueColor }) {
   return (
-    <Card className="flex flex-col gap-1">
-      <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
-      <p className={`text-2xl font-bold ${valueColor || 'text-gray-100'}`}>{value}</p>
-      {sub && <p className="text-sm text-gray-500">{sub}</p>}
-    </Card>
+    <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-5 border border-slate-700/60 shadow-glass flex flex-col gap-1.5">
+      <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">{label}</p>
+      <p className={`text-2xl font-bold tabular-nums ${valueColor || 'text-slate-100'}`}>{value}</p>
+      {sub && <p className="text-xs text-slate-500 font-medium">{sub}</p>}
+    </div>
   )
 }
 
@@ -99,7 +99,7 @@ export default function PortfolioPage() {
   const totalPl = totalCost > 0 ? totalValue - totalCost : null
   const totalPlPct = totalCost > 0 && totalPl !== null ? (totalPl / totalCost) * 100 : null
 
-  const plColor = totalPl === null ? 'text-gray-100' : totalPl >= 0 ? 'text-emerald-400' : 'text-red-400'
+  const plColor = totalPl === null ? 'text-slate-100' : totalPl >= 0 ? 'text-emerald-400' : 'text-red-400'
 
   async function handleAddPosition(data) {
     await addPosition(data)
@@ -115,72 +115,47 @@ export default function PortfolioPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-100">Portefeuille</h1>
+        <h1 className="text-xl font-bold text-slate-100">Portefeuille</h1>
         <div className="flex items-center gap-3">
           <button
             onClick={() => fetchMarketData(positions)}
             disabled={quotesLoading || positions.length === 0}
-            className="text-sm text-gray-400 hover:text-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="text-sm text-slate-400 hover:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700/60"
           >
             {quotesLoading ? 'Chargement...' : 'Rafraîchir'}
           </button>
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              className="bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200"
             >
-              + Ajouter une position
+              + Ajouter
             </button>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3">
+        <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm rounded-xl px-4 py-3">
           {error}
         </div>
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <MetricCard
-          label="Valeur totale"
-          value={formatEur(totalValue)}
-          valueColor="text-gray-100"
-        />
-        <MetricCard
-          label="Coût total"
-          value={formatEur(totalCost)}
-          valueColor="text-gray-100"
-        />
-        <MetricCard
-          label="P&L total"
-          value={formatEur(totalPl)}
-          sub={formatPct(totalPlPct)}
-          valueColor={plColor}
-        />
-        <MetricCard
-          label="Positions"
-          value={positions.length}
-          valueColor="text-gray-100"
-        />
+        <MetricCard label="Valeur totale" value={formatEur(totalValue)} valueColor="text-slate-100" />
+        <MetricCard label="Coût total" value={formatEur(totalCost)} valueColor="text-slate-100" />
+        <MetricCard label="P&L total" value={formatEur(totalPl)} sub={formatPct(totalPlPct)} valueColor={plColor} />
+        <MetricCard label="Positions" value={positions.length} valueColor="text-slate-100" />
       </div>
 
       {showForm && (
-        <AddPositionForm
-          onSubmit={handleAddPosition}
-          onCancel={() => setShowForm(false)}
-        />
+        <AddPositionForm onSubmit={handleAddPosition} onCancel={() => setShowForm(false)} />
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-500 text-sm">Chargement...</div>
+        <div className="text-center py-12 text-slate-500 text-sm">Chargement...</div>
       ) : (
-        <PositionTable
-          positions={positions}
-          quotes={quotes}
-          fxRates={fxRates}
-          onDelete={handleDelete}
-        />
+        <PositionTable positions={positions} quotes={quotes} fxRates={fxRates} onDelete={handleDelete} />
       )}
 
       {enriched.length > 0 && (

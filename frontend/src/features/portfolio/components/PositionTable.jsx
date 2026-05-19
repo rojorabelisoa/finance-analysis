@@ -25,17 +25,17 @@ const marketColor = { US: 'blue', EU: 'green', WORLD: 'orange' }
 export default function PositionTable({ positions, quotes, fxRates, onDelete }) {
   if (!positions || positions.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-500">
+      <div className="text-center py-16 text-slate-500 text-sm">
         Aucune position. Ajoutez votre première position.
       </div>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-700">
+    <div className="overflow-x-auto rounded-2xl border border-slate-700/60 shadow-glass">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-gray-800 border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wide">
+          <tr className="bg-slate-900/60 border-b border-slate-700/60 text-slate-500 text-xs uppercase tracking-widest">
             <th className="text-left px-4 py-3 font-medium">Ticker</th>
             <th className="text-left px-4 py-3 font-medium">Nom</th>
             <th className="text-left px-4 py-3 font-medium">Type</th>
@@ -48,7 +48,7 @@ export default function PositionTable({ positions, quotes, fxRates, onDelete }) 
             <th className="px-4 py-3"></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="bg-slate-800/30">
           {positions.map((pos) => {
             const quote = quotes?.[pos.ticker]
             const currentPriceNative = quote?.price ?? null
@@ -63,28 +63,28 @@ export default function PositionTable({ positions, quotes, fxRates, onDelete }) 
             const plColor = plEur === null ? '' : plEur >= 0 ? 'text-emerald-400' : 'text-red-400'
 
             return (
-              <tr key={pos.id} className="border-b border-gray-700/50 hover:bg-gray-800/50 transition-colors">
+              <tr key={pos.id} className="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
                 <td className="px-4 py-3">
-                  <span className="font-mono font-semibold text-emerald-400">{pos.ticker}</span>
+                  <span className="font-mono font-semibold text-emerald-400 text-xs tracking-wider">{pos.ticker}</span>
                 </td>
-                <td className="px-4 py-3 text-gray-300 max-w-[160px] truncate">{pos.name || '—'}</td>
+                <td className="px-4 py-3 text-slate-300 max-w-[160px] truncate">{pos.name || '—'}</td>
                 <td className="px-4 py-3">
                   <Badge color={typeColor[pos.type] || 'gray'}>{pos.type?.toUpperCase()}</Badge>
                 </td>
                 <td className="px-4 py-3">
                   <Badge color={marketColor[pos.market] || 'gray'}>{pos.market}</Badge>
                 </td>
-                <td className="px-4 py-3 text-right text-gray-300">{pos.shares}</td>
-                <td className="px-4 py-3 text-right text-gray-300">
-                  {pos.avgPrice} <span className="text-gray-500 text-xs">{pos.currency}</span>
+                <td className="px-4 py-3 text-right text-slate-300 tabular-nums">{pos.shares}</td>
+                <td className="px-4 py-3 text-right text-slate-300 tabular-nums">
+                  {pos.avgPrice} <span className="text-slate-500 text-xs">{pos.currency}</span>
                 </td>
-                <td className="px-4 py-3 text-right text-gray-300">{formatEur(currentValueEur)}</td>
-                <td className={`px-4 py-3 text-right font-medium ${plColor}`}>{formatEur(plEur)}</td>
-                <td className={`px-4 py-3 text-right font-medium ${plColor}`}>{formatPct(plPct)}</td>
+                <td className="px-4 py-3 text-right text-slate-300 tabular-nums">{formatEur(currentValueEur)}</td>
+                <td className={`px-4 py-3 text-right font-semibold tabular-nums ${plColor}`}>{formatEur(plEur)}</td>
+                <td className={`px-4 py-3 text-right font-semibold tabular-nums ${plColor}`}>{formatPct(plPct)}</td>
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => onDelete(pos.id)}
-                    className="text-gray-600 hover:text-red-400 transition-colors text-xs px-2 py-1 rounded hover:bg-red-500/10"
+                    className="text-slate-600 hover:text-red-400 transition-colors text-xs px-2 py-1 rounded-lg hover:bg-red-500/10"
                     title="Supprimer"
                   >
                     Supprimer

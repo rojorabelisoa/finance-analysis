@@ -41,10 +41,10 @@ function CustomTooltip({ active, payload }) {
   const total = payload[0]?.payload?.total || 1
   const pct = ((entry.value / total) * 100).toFixed(1)
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm shadow-xl">
-      <p className="text-gray-100 font-medium">{entry.name}</p>
+    <div className="bg-slate-900 border border-slate-700/60 rounded-xl px-3 py-2 text-sm shadow-glass">
+      <p className="text-slate-100 font-semibold">{entry.name}</p>
       <p className="text-emerald-400">{formatEur(entry.value)}</p>
-      <p className="text-gray-400">{pct} %</p>
+      <p className="text-slate-400">{pct} %</p>
     </div>
   )
 }
@@ -55,7 +55,7 @@ function MiniPie({ data, title }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <h4 className="text-sm font-medium text-gray-400 text-center">{title}</h4>
+      <h4 className="text-sm font-medium text-slate-400 text-center">{title}</h4>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
           <Pie
@@ -75,7 +75,7 @@ function MiniPie({ data, title }) {
           <Legend
             iconType="circle"
             iconSize={8}
-            formatter={(value) => <span className="text-gray-400 text-xs">{value}</span>}
+            formatter={(value) => <span className="text-slate-400 text-xs">{value}</span>}
           />
         </PieChart>
       </ResponsiveContainer>
@@ -104,7 +104,7 @@ export default function AllocationChart({ positions }) {
 
   return (
     <Card>
-      <h3 className="text-gray-100 font-semibold mb-6">Allocation</h3>
+      <h3 className="text-slate-100 font-semibold mb-6">Allocation</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <MiniPie data={typeData} title="Par type" />
         <MiniPie data={marketData} title="Par marché" />

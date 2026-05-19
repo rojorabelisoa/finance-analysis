@@ -13,8 +13,8 @@ const EMPTY_FORM = {
   buyDate: '',
 }
 
-const inputCls = 'bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm placeholder-gray-600 focus:outline-none focus:border-emerald-500 transition-colors w-full'
-const labelCls = 'text-xs text-gray-400 mb-1 block'
+const inputCls = 'bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm placeholder-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all w-full'
+const labelCls = 'text-xs font-medium text-slate-500 uppercase tracking-wide mb-1 block'
 
 export default function AddPositionForm({ onSubmit, onCancel }) {
   const [query, setQuery] = useState('')
@@ -30,7 +30,6 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
   const debounceRef = useRef(null)
   const wrapperRef = useRef(null)
 
-  // Fermer le dropdown si clic en dehors
   useEffect(() => {
     function handleClick(e) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -41,7 +40,6 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Debounced search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (query.trim().length < 2) {
@@ -123,11 +121,10 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
   const canSubmit = form.ticker && form.name && form.shares && form.avgPrice && !submitLoading && !fundamentalsLoading
 
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-      <h3 className="text-gray-100 font-semibold mb-5">Ajouter une position</h3>
+    <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl border border-slate-700/60 p-6 shadow-glass">
+      <h3 className="text-slate-100 font-semibold mb-5">Ajouter une position</h3>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Champ de recherche avec autocomplete */}
         <div ref={wrapperRef} className="relative">
           <label className={labelCls}>Rechercher (ticker, ISIN ou nom)</label>
           <div className="relative">
@@ -141,37 +138,34 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
               autoComplete="off"
             />
             {suggestionsLoading && (
-              <div className="absolute right-3 top-2.5 text-gray-500 text-xs">...</div>
+              <div className="absolute right-3 top-2.5 text-slate-500 text-xs">...</div>
             )}
           </div>
 
-          {/* Dropdown suggestions */}
           {showDropdown && suggestions.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
+            <div className="absolute z-20 mt-1 w-full bg-slate-900 border border-slate-700/60 rounded-xl shadow-glass overflow-hidden">
               {suggestions.map((s) => (
                 <button
                   key={s.symbol}
                   type="button"
                   onClick={() => selectSuggestion(s)}
-                  className="w-full px-4 py-2.5 text-left hover:bg-gray-700 transition-colors flex items-center justify-between gap-3"
+                  className="w-full px-4 py-2.5 text-left hover:bg-slate-800 transition-colors flex items-center justify-between gap-3"
                 >
                   <span className="flex items-center gap-2">
-                    <span className="text-emerald-400 font-mono text-sm font-semibold">{s.symbol}</span>
-                    <span className="text-gray-300 text-sm truncate">{s.name}</span>
+                    <span className="text-emerald-400 font-mono text-xs font-semibold tracking-wider">{s.symbol}</span>
+                    <span className="text-slate-300 text-sm truncate">{s.name}</span>
                   </span>
-                  <span className="text-gray-600 text-xs shrink-0">{s.exchange}</span>
+                  <span className="text-slate-600 text-xs shrink-0">{s.exchange}</span>
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Spinner fundamentals */}
         {fundamentalsLoading && (
-          <p className="text-gray-500 text-sm">Chargement des données...</p>
+          <p className="text-slate-500 text-sm">Chargement des données...</p>
         )}
 
-        {/* Champs auto-remplis — visibles dès qu'on a un ticker */}
         {form.ticker && !fundamentalsLoading && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -225,10 +219,9 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
               </div>
             </div>
 
-            {/* Description entreprise */}
             {description && (
-              <div className="bg-gray-900 rounded-lg px-4 py-3 border border-gray-700">
-                <p className={`text-gray-400 text-xs leading-relaxed ${!descExpanded ? 'line-clamp-3' : ''}`}>
+              <div className="bg-slate-900/60 rounded-xl px-4 py-3 border border-slate-700/40">
+                <p className={`text-slate-400 text-xs leading-relaxed ${!descExpanded ? 'line-clamp-3' : ''}`}>
                   {description}
                 </p>
                 {description.length > 200 && (
@@ -242,7 +235,7 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
         )}
 
         {submitError && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3">
+          <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm rounded-xl px-4 py-3">
             {submitError}
           </div>
         )}
@@ -251,11 +244,11 @@ export default function AddPositionForm({ onSubmit, onCancel }) {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium rounded-lg px-4 py-2 text-sm transition-colors"
+            className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl px-4 py-2 text-sm transition-all duration-200"
           >
             {submitLoading ? 'Ajout...' : 'Ajouter la position'}
           </button>
-          <button type="button" onClick={onCancel} className="text-gray-400 hover:text-gray-200 text-sm px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+          <button type="button" onClick={onCancel} className="text-slate-400 hover:text-slate-200 text-sm px-4 py-2 rounded-xl hover:bg-slate-700/50 transition-colors">
             Annuler
           </button>
         </div>

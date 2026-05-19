@@ -31,30 +31,30 @@ export default function QuoteCard({ quote }) {
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+            <span className="text-xs font-mono tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
               {quote.ticker}
             </span>
-            <h2 className="text-gray-100 font-semibold text-lg mt-2">{quote.name || quote.ticker}</h2>
+            <h2 className="text-slate-100 font-semibold text-lg mt-2">{quote.name || quote.ticker}</h2>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-gray-100">
-              {formatNumber(quote.price)} <span className="text-sm font-normal text-gray-500">{quote.currency}</span>
+            <div className="text-3xl font-bold text-slate-100 tabular-nums">
+              {formatNumber(quote.price)} <span className="text-sm font-normal text-slate-500">{quote.currency}</span>
             </div>
-            <div className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-sm font-medium border ${changeBg} ${changeBorder} ${changeColor}`}>
+            <div className={`inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg text-sm font-semibold border ${changeBg} ${changeBorder} ${changeColor}`}>
               <span>{arrow}</span>
               <span>{formatNumber(quote.change)}</span>
               <span>({formatNumber(quote.changePercent)} %)</span>
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-700">
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/60">
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">Volume</p>
-            <p className="text-sm text-gray-300">{quote.volume ? Number(quote.volume).toLocaleString('fr-FR') : 'N/A'}</p>
+            <p className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Volume</p>
+            <p className="text-sm text-slate-300 font-medium">{quote.volume ? Number(quote.volume).toLocaleString('fr-FR') : 'N/A'}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 mb-0.5">Capitalisation</p>
-            <p className="text-sm text-gray-300">{formatMarketCap(quote.marketCap)}</p>
+            <p className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Capitalisation</p>
+            <p className="text-sm text-slate-300 font-medium">{formatMarketCap(quote.marketCap)}</p>
           </div>
         </div>
       </div>

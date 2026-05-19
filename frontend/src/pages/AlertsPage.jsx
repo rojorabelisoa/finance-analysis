@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react'
 import alertService from '../features/alerts/services/alertService'
 import Card from '../shared/components/Card'
 
-const inputCls = 'bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-emerald-500 transition-colors w-full'
-const labelCls = 'text-xs text-gray-400 mb-1 block'
+const inputCls = 'bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all w-full'
+const labelCls = 'text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5 block'
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([])
@@ -64,15 +64,15 @@ export default function AlertsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-gray-100">Alertes</h1>
+      <h1 className="text-2xl font-bold text-slate-100">Alertes</h1>
 
       <Card>
-        <h2 className="text-gray-200 font-medium mb-4">Nouvelle alerte</h2>
-        <p className="text-xs text-gray-500 mb-4">
+        <h2 className="text-slate-200 font-semibold mb-2">Nouvelle alerte</h2>
+        <p className="text-xs text-slate-500 mb-5">
           Reçois un email quand le P/E d'un titre descend sous ton seuil. L'alerte se déclenche une seule fois et se désactive ensuite.
         </p>
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 mb-4">{error}</div>
+          <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm rounded-xl px-4 py-3 mb-4">{error}</div>
         )}
         <form onSubmit={handleSubmit} className="flex flex-wrap gap-4 items-end">
           <div className="flex-1 min-w-[120px]">
@@ -107,7 +107,7 @@ export default function AlertsPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-medium rounded-lg px-5 py-2 text-sm transition-colors"
+            className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-semibold rounded-xl px-5 py-2 text-sm transition-all duration-200"
           >
             {submitting ? 'Création...' : "Créer l'alerte"}
           </button>
@@ -115,30 +115,37 @@ export default function AlertsPage() {
       </Card>
 
       <Card>
-        <h2 className="text-gray-200 font-medium mb-4">Mes alertes</h2>
+        <h2 className="text-slate-200 font-semibold mb-4">Mes alertes</h2>
         {loading ? (
-          <p className="text-gray-500 text-sm">Chargement...</p>
+          <p className="text-slate-500 text-sm">Chargement...</p>
         ) : alerts.length === 0 ? (
-          <p className="text-gray-500 text-sm">Aucune alerte configurée.</p>
+          <p className="text-slate-500 text-sm">Aucune alerte configurée.</p>
         ) : (
           <div className="flex flex-col gap-3">
             {alerts.map((a) => (
-              <div key={a.id} className={`flex items-center justify-between p-3 rounded-lg border ${a.active ? 'border-gray-700 bg-gray-900' : 'border-gray-800 bg-gray-900/50 opacity-60'}`}>
+              <div
+                key={a.id}
+                className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+                  a.active
+                    ? 'border-slate-700/60 bg-slate-900/40'
+                    : 'border-slate-700/30 bg-slate-900/20 opacity-60'
+                }`}
+              >
                 <div className="flex items-center gap-4">
-                  <span className="font-mono text-emerald-400 font-semibold">{a.ticker}</span>
-                  <span className="text-gray-400 text-sm">P/E &lt; {a.threshold}</span>
+                  <span className="font-mono text-emerald-400 font-semibold text-sm tracking-wider">{a.ticker}</span>
+                  <span className="text-slate-400 text-sm">P/E &lt; {a.threshold}</span>
                   {!a.active && (
-                    <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded px-2 py-0.5">
+                    <span className="text-xs bg-amber-500/15 text-amber-400 border border-amber-500/25 rounded-lg px-2 py-0.5">
                       Déclenchée {a.triggeredAt ? new Date(a.triggeredAt).toLocaleDateString('fr-FR') : ''}
                     </span>
                   )}
                   {a.active && (
-                    <span className="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded px-2 py-0.5">Active</span>
+                    <span className="text-xs bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 rounded-lg px-2 py-0.5">Active</span>
                   )}
                 </div>
                 <button
                   onClick={() => handleDelete(a.id)}
-                  className="text-gray-600 hover:text-red-400 transition-colors text-sm px-2 py-1 rounded hover:bg-red-500/10"
+                  className="text-slate-600 hover:text-red-400 transition-colors text-sm px-2 py-1 rounded-lg hover:bg-red-500/10"
                 >
                   Supprimer
                 </button>

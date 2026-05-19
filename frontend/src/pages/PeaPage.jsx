@@ -48,8 +48,8 @@ function formatMonthYear(isoDate) {
 }
 
 const inputCls =
-  'bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 text-sm focus:outline-none focus:border-emerald-500 transition-colors w-full'
-const labelCls = 'text-xs text-gray-400 mb-1 block'
+  'bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all w-full'
+const labelCls = 'text-xs font-medium text-slate-500 uppercase tracking-wide mb-1 block'
 
 const TABS = [
   { id: 'historique', label: 'Graphique' },
@@ -87,8 +87,8 @@ function HistoriqueSection() {
     load()
   }, [])
 
-  if (loading) return <p className="text-gray-500 text-sm py-8 text-center">Chargement...</p>
-  if (error) return <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3">{error}</div>
+  if (loading) return <p className="text-slate-500 text-sm py-8 text-center">Chargement...</p>
+  if (error) return <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm rounded-xl px-4 py-3">{error}</div>
 
   const snapshots = history?.snapshots || []
   const totalInvested = history?.totalInvested || 0
@@ -102,11 +102,11 @@ function HistoriqueSection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-gray-100 font-semibold text-lg">Évolution du portefeuille</h2>
+      <h2 className="text-slate-100 font-semibold text-lg">Évolution du portefeuille</h2>
 
       {chartData.length === 0 ? (
         <Card>
-          <p className="text-gray-500 text-sm text-center py-6">
+          <p className="text-slate-500 text-sm text-center py-6">
             Aucune donnée d'historique disponible.
           </p>
         </Card>
@@ -120,15 +120,15 @@ function HistoriqueSection() {
                   <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} />
               <YAxis
-                tick={{ fill: '#9ca3af', fontSize: 11 }}
+                tick={{ fill: '#64748b', fontSize: 11 }}
                 tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8 }}
-                labelStyle={{ color: '#e5e7eb' }}
+                contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 12 }}
+                labelStyle={{ color: '#f1f5f9' }}
                 formatter={(v) => [fmt(v), 'Investi']}
               />
               <Area
@@ -148,7 +148,7 @@ function HistoriqueSection() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Total investi</p>
-          <p className="text-lg font-bold text-gray-100">{fmt(totalInvested)}</p>
+          <p className="text-lg font-bold text-slate-100">{fmt(totalInvested)}</p>
         </Card>
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Plus-value latente</p>
@@ -157,17 +157,17 @@ function HistoriqueSection() {
               <p className={`text-lg font-bold ${currentValue - totalInvested >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {fmt(currentValue - totalInvested)}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-500">
                 {fmtPct(totalInvested > 0 ? ((currentValue - totalInvested) / totalInvested) * 100 : null)}
               </p>
             </>
           ) : (
-            <p className="text-lg font-bold text-gray-500">—</p>
+            <p className="text-lg font-bold text-slate-500">—</p>
           )}
         </Card>
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Nombre de positions</p>
-          <p className="text-lg font-bold text-gray-100">{nbPositions}</p>
+          <p className="text-lg font-bold text-slate-100">{nbPositions}</p>
         </Card>
       </div>
     </div>
@@ -207,7 +207,7 @@ function DcaSection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-gray-100 font-semibold text-lg">Simulateur DCA</h2>
+      <h2 className="text-slate-100 font-semibold text-lg">Simulateur DCA</h2>
 
       <Card>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
@@ -271,19 +271,19 @@ function DcaSection() {
                 <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis
               dataKey="year"
-              tick={{ fill: '#9ca3af', fontSize: 11 }}
+              tick={{ fill: '#64748b', fontSize: 11 }}
               tickFormatter={(v) => `${v}a`}
             />
             <YAxis
-              tick={{ fill: '#9ca3af', fontSize: 11 }}
+              tick={{ fill: '#64748b', fontSize: 11 }}
               tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8 }}
-              labelStyle={{ color: '#e5e7eb' }}
+              contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 12 }}
+              labelStyle={{ color: '#f1f5f9' }}
               labelFormatter={(v) => `Année ${v}`}
               formatter={(v, name) => [fmt(v), name === 'value' ? 'Valeur' : 'Investi']}
             />
@@ -316,12 +316,12 @@ function DcaSection() {
         </Card>
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Total investi</p>
-          <p className="text-lg font-bold text-gray-100">{fmt(totalInvested)}</p>
+          <p className="text-lg font-bold text-slate-100">{fmt(totalInvested)}</p>
         </Card>
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Plus-value</p>
           <p className={`text-lg font-bold ${gain >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt(gain)}</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-slate-500">
             {totalInvested > 0 ? `× ${(finalValue / totalInvested).toFixed(2)}` : ''}
           </p>
         </Card>
@@ -466,15 +466,15 @@ function AllocationSection() {
       fill: DONUT_COLORS[i % DONUT_COLORS.length],
     }))
 
-  if (loading) return <p className="text-gray-500 text-sm py-8 text-center">Chargement...</p>
+  if (loading) return <p className="text-slate-500 text-sm py-8 text-center">Chargement...</p>
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-gray-100 font-semibold text-lg">Allocation cible</h2>
+      <h2 className="text-slate-100 font-semibold text-lg">Allocation cible</h2>
 
       {/* Define targets */}
       <Card>
-        <h3 className="text-gray-200 font-medium mb-4">Définir l'allocation cible</h3>
+        <h3 className="text-slate-200 font-medium mb-4">Définir l'allocation cible</h3>
         <div className="flex flex-col gap-3 mb-4">
           {targets.map((t, idx) => (
             <div key={idx} className="flex gap-3 items-end">
@@ -512,7 +512,7 @@ function AllocationSection() {
               </div>
               <button
                 onClick={() => removeTarget(idx)}
-                className="text-gray-600 hover:text-red-400 transition-colors text-sm px-2 py-2 rounded hover:bg-red-500/10 mb-0.5"
+                className="text-slate-600 hover:text-red-400 transition-colors text-sm px-2 py-2 rounded-lg hover:bg-red-500/10 mb-0.5"
               >
                 ✕
               </button>
@@ -523,7 +523,7 @@ function AllocationSection() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <button
             onClick={addTarget}
-            className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
           >
             + Ajouter un actif
           </button>
@@ -539,7 +539,7 @@ function AllocationSection() {
             <button
               onClick={saveSettings}
               disabled={saving}
-              className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-medium rounded-lg px-4 py-2 text-sm transition-colors"
+              className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-semibold rounded-xl px-4 py-2 text-sm transition-all duration-200"
             >
               {saving ? 'Sauvegarde...' : 'Sauvegarder'}
             </button>
@@ -554,11 +554,11 @@ function AllocationSection() {
 
       {/* Comparison charts */}
       <Card>
-        <h3 className="text-gray-200 font-medium mb-1">Allocation actuelle vs cible</h3>
-        <p className="text-xs text-gray-500 mb-4">Basé sur le coût d'achat en EUR</p>
+        <h3 className="text-slate-200 font-medium mb-1">Allocation actuelle vs cible</h3>
+        <p className="text-xs text-slate-500 mb-4">Basé sur le coût d'achat en EUR</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className="text-xs text-gray-400 text-center mb-2">Cible</p>
+            <p className="text-xs text-slate-400 text-center mb-2">Cible</p>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
@@ -575,17 +575,17 @@ function AllocationSection() {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8 }}
+                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 12 }}
                   formatter={(v, name) => [`${v} %`, name]}
                 />
                 <Legend
-                  formatter={(value) => <span style={{ color: '#9ca3af', fontSize: 12 }}>{value}</span>}
+                  formatter={(value) => <span style={{ color: '#64748b', fontSize: 12 }}>{value}</span>}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div>
-            <p className="text-xs text-gray-400 text-center mb-2">Actuelle</p>
+            <p className="text-xs text-slate-400 text-center mb-2">Actuelle</p>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
@@ -602,18 +602,18 @@ function AllocationSection() {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8 }}
+                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 12 }}
                   formatter={(v, name) => [`${v} %`, name]}
                 />
                 {donutActual.length > 0 && (
                   <Legend
-                    formatter={(value) => <span style={{ color: '#9ca3af', fontSize: 12 }}>{value}</span>}
+                    formatter={(value) => <span style={{ color: '#64748b', fontSize: 12 }}>{value}</span>}
                   />
                 )}
               </PieChart>
             </ResponsiveContainer>
             {donutActual.length === 0 && (
-              <p className="text-xs text-gray-500 text-center -mt-2">Aucune position enregistrée</p>
+              <p className="text-xs text-slate-500 text-center -mt-2">Aucune position enregistrée</p>
             )}
           </div>
         </div>
@@ -622,11 +622,11 @@ function AllocationSection() {
           <div className="mt-4">
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={comparisonData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8 }}
+                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 12 }}
                   formatter={(v, name) => [`${v} %`, name === 'target' ? 'Cible' : 'Actuelle']}
                 />
                 <Bar dataKey="target" fill="#6366f1" radius={[4, 4, 0, 0]} name="target" />
@@ -639,7 +639,7 @@ function AllocationSection() {
 
       {/* Rebalancing suggestion */}
       <Card>
-        <h3 className="text-gray-200 font-medium mb-4">Suggestion de rééquilibrage</h3>
+        <h3 className="text-slate-200 font-medium mb-4">Suggestion de rééquilibrage</h3>
         <div className="flex items-center gap-4 mb-4">
           <div className="w-48">
             <label className={labelCls}>Prochain versement (€)</label>
@@ -654,23 +654,23 @@ function AllocationSection() {
           </div>
         </div>
         {suggestions.length === 0 ? (
-          <p className="text-gray-500 text-sm">
+          <p className="text-slate-500 text-sm">
             Portefeuille équilibré ou aucune position à comparer.
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-gray-400 mb-1">
+            <p className="text-sm text-slate-400 mb-1">
               Pour rééquilibrer avec {fmt(nextDeposit)}, achetez :
             </p>
             {suggestions.map((s, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between bg-gray-900 rounded-lg px-4 py-2.5 border border-gray-700"
+                className="flex items-center justify-between bg-slate-900/60 rounded-xl px-4 py-2.5 border border-slate-700/60"
               >
-                <span className="text-sm font-medium text-gray-100">
+                <span className="text-sm font-medium text-slate-100">
                   {s.label}
                   {s.ticker && s.ticker !== s.label && (
-                    <span className="text-gray-500 ml-2 text-xs">{s.ticker}</span>
+                    <span className="text-slate-500 ml-2 text-xs">{s.ticker}</span>
                   )}
                 </span>
                 <span className="text-emerald-400 font-semibold text-sm">+{fmt(s.amount)}</span>
@@ -723,19 +723,19 @@ function FiscalSection() {
     }
   }
 
-  if (loading) return <p className="text-gray-500 text-sm py-8 text-center">Chargement...</p>
+  if (loading) return <p className="text-slate-500 text-sm py-8 text-center">Chargement...</p>
 
   if (!data || !data.openingDate) {
     return (
       <div className="flex flex-col gap-6">
-        <h2 className="text-gray-100 font-semibold text-lg">Calendrier fiscal PEA</h2>
+        <h2 className="text-slate-100 font-semibold text-lg">Calendrier fiscal PEA</h2>
         <Card>
-          <h3 className="text-gray-200 font-medium mb-2">Date d'ouverture du PEA</h3>
-          <p className="text-sm text-gray-400 mb-4">
+          <h3 className="text-slate-200 font-medium mb-2">Date d'ouverture du PEA</h3>
+          <p className="text-sm text-slate-400 mb-4">
             Renseignez la date d'ouverture de votre PEA pour afficher les informations fiscales.
           </p>
           {saveError && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 mb-4">
+            <div className="bg-red-500/10 border border-red-500/25 text-red-400 text-sm rounded-xl px-4 py-3 mb-4">
               {saveError}
             </div>
           )}
@@ -753,7 +753,7 @@ function FiscalSection() {
             <button
               type="submit"
               disabled={saving}
-              className="bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-medium rounded-lg px-4 py-2 text-sm transition-colors"
+              className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-semibold rounded-xl px-4 py-2 text-sm transition-all duration-200"
             >
               {saving ? 'Sauvegarde...' : 'Enregistrer'}
             </button>
@@ -768,16 +768,16 @@ function FiscalSection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-gray-100 font-semibold text-lg">Calendrier fiscal PEA</h2>
+      <h2 className="text-slate-100 font-semibold text-lg">Calendrier fiscal PEA</h2>
 
       <Card>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-medium text-gray-200">Progression vers 5 ans</p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm font-medium text-slate-200">Progression vers 5 ans</p>
+          <p className="text-sm text-slate-400">
             {data.yearsOpen?.toFixed(2)} / 5 ans
           </p>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+        <div className="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
           <div
             className={`h-4 rounded-full transition-all duration-500 ${reached ? 'bg-emerald-500' : 'bg-indigo-500'}`}
             style={{ width: `${progressPct}%` }}
@@ -791,12 +791,12 @@ function FiscalSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Date d'ouverture</p>
-          <p className="text-base font-bold text-gray-100">{formatDateFR(data.openingDate)}</p>
+          <p className="text-base font-bold text-slate-100">{formatDateFR(data.openingDate)}</p>
         </Card>
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Objectif 5 ans</p>
-          <p className="text-base font-bold text-gray-100">{formatDateFR(data.fiveYearDate)}</p>
-          <p className={`text-xs mt-0.5 ${reached ? 'text-emerald-400' : 'text-gray-400'}`}>
+          <p className="text-base font-bold text-slate-100">{formatDateFR(data.fiveYearDate)}</p>
+          <p className={`text-xs mt-0.5 ${reached ? 'text-emerald-400' : 'text-slate-400'}`}>
             {reached ? 'Atteint ✓' : `dans ${data.daysToFiveYears} jours`}
           </p>
         </Card>
@@ -805,51 +805,51 @@ function FiscalSection() {
           {reached ? (
             <>
               <p className="text-base font-bold text-emerald-400">17.2 %</p>
-              <p className="text-xs text-gray-400">Prélèvements sociaux</p>
+              <p className="text-xs text-slate-400">Prélèvements sociaux</p>
             </>
           ) : (
             <>
               <p className="text-base font-bold text-amber-400">30 %</p>
-              <p className="text-xs text-gray-400">PFU (avant 5 ans)</p>
+              <p className="text-xs text-slate-400">PFU (avant 5 ans)</p>
             </>
           )}
         </Card>
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Plafond restant</p>
-          <p className="text-base font-bold text-gray-100">
+          <p className="text-base font-bold text-slate-100">
             {data.maxContributionRemaining !== undefined ? fmt(data.maxContributionRemaining) : '—'}
           </p>
-          <p className="text-xs text-gray-400">sur 150 000 €</p>
+          <p className="text-xs text-slate-400">sur 150 000 €</p>
         </Card>
       </div>
 
       <Card>
-        <h3 className="text-gray-200 font-medium mb-3">Règles fiscales du PEA</h3>
+        <h3 className="text-slate-200 font-medium mb-3">Règles fiscales du PEA</h3>
         <div className="flex flex-col gap-4">
           <div className="flex gap-3 items-start">
             <div className="w-2 h-2 rounded-full bg-red-400 mt-1.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-gray-200">Avant 5 ans</p>
-              <p className="text-sm text-gray-400">
-                Tout retrait entraîne la <strong className="text-gray-300">clôture du PEA</strong>. Les gains sont taxés à <strong className="text-gray-300">30 % (PFU)</strong> : 12.8 % d'impôt sur le revenu + 17.2 % de prélèvements sociaux.
+              <p className="text-sm font-medium text-slate-200">Avant 5 ans</p>
+              <p className="text-sm text-slate-400">
+                Tout retrait entraîne la <strong className="text-slate-300">clôture du PEA</strong>. Les gains sont taxés à <strong className="text-slate-300">30 % (PFU)</strong> : 12.8 % d'impôt sur le revenu + 17.2 % de prélèvements sociaux.
               </p>
             </div>
           </div>
           <div className="flex gap-3 items-start">
             <div className="w-2 h-2 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-gray-200">Après 5 ans</p>
-              <p className="text-sm text-gray-400">
-                Les retraits partiels sont possibles <strong className="text-gray-300">sans clôture du PEA</strong>. Les gains ne sont taxés qu'à <strong className="text-gray-300">17.2 % (prélèvements sociaux uniquement)</strong>.
+              <p className="text-sm font-medium text-slate-200">Après 5 ans</p>
+              <p className="text-sm text-slate-400">
+                Les retraits partiels sont possibles <strong className="text-slate-300">sans clôture du PEA</strong>. Les gains ne sont taxés qu'à <strong className="text-slate-300">17.2 % (prélèvements sociaux uniquement)</strong>.
               </p>
             </div>
           </div>
           <div className="flex gap-3 items-start">
             <div className="w-2 h-2 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-gray-200">Plafond des versements</p>
-              <p className="text-sm text-gray-400">
-                Le PEA est plafonné à <strong className="text-gray-300">150 000 €</strong> de versements (hors plus-values). Ce plafond est personnel et ne se reconstitue pas après retrait.
+              <p className="text-sm font-medium text-slate-200">Plafond des versements</p>
+              <p className="text-sm text-slate-400">
+                Le PEA est plafonné à <strong className="text-slate-300">150 000 €</strong> de versements (hors plus-values). Ce plafond est personnel et ne se reconstitue pas après retrait.
               </p>
             </div>
           </div>
@@ -866,17 +866,17 @@ export default function PeaPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-bold text-gray-100">PEA</h1>
+      <h1 className="text-xl font-bold text-slate-100">PEA</h1>
 
-      <div className="flex gap-1 bg-gray-800 rounded-xl p-1 border border-gray-700 w-fit">
+      <div className="flex gap-1 bg-slate-800/60 backdrop-blur-sm rounded-xl p-1 border border-slate-700/60 w-fit">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
                 ? 'bg-emerald-500 text-white'
-                : 'text-gray-400 hover:text-gray-200'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
             }`}
           >
             {tab.label}

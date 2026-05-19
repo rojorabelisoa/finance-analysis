@@ -11,7 +11,7 @@ function fmtPct(value) {
   const num = parseFloat(value) * 100
   if (isNaN(num)) return 'N/A'
   const color = num >= 0 ? 'text-emerald-400' : 'text-red-400'
-  return <span className={color}>{num >= 0 ? '+' : ''}{num.toFixed(2)} %</span>
+  return <span className={`font-semibold ${color}`}>{num >= 0 ? '+' : ''}{num.toFixed(2)} %</span>
 }
 
 function fmtDividend(value) {
@@ -21,9 +21,9 @@ function fmtDividend(value) {
 
 function MetricRow({ label, value }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-gray-700 last:border-0">
-      <span className="text-sm text-gray-400">{label}</span>
-      <span className="text-sm text-gray-100 font-medium">{value}</span>
+    <div className="flex items-center justify-between py-2.5 border-b border-slate-700/40 last:border-0">
+      <span className="text-sm text-slate-400">{label}</span>
+      <span className="text-sm text-slate-100 font-semibold tabular-nums">{value}</span>
     </div>
   )
 }
@@ -33,7 +33,7 @@ export default function FundamentalsPanel({ fundamentals }) {
 
   return (
     <Card>
-      <h3 className="text-gray-100 font-semibold mb-4">Fondamentaux</h3>
+      <h3 className="text-slate-100 font-semibold mb-4">Fondamentaux</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
         <div>
           <MetricRow label="P/E (TTM)" value={fmt(fundamentals.peRatio)} />
@@ -45,8 +45,8 @@ export default function FundamentalsPanel({ fundamentals }) {
         <div>
           <MetricRow label="Croissance CA" value={fmtPct(fundamentals.revenueGrowth)} />
           <MetricRow label="Dividende" value={fmtDividend(fundamentals.dividendYield)} />
-          <MetricRow label="Plus haut 52 semaines" value={fmt(fundamentals.week52High)} />
-          <MetricRow label="Plus bas 52 semaines" value={fmt(fundamentals.week52Low)} />
+          <MetricRow label="Plus haut 52 sem." value={fmt(fundamentals.week52High)} />
+          <MetricRow label="Plus bas 52 sem." value={fmt(fundamentals.week52Low)} />
           <MetricRow label="Secteur" value={fundamentals.sector || 'N/A'} />
         </div>
       </div>

@@ -9,6 +9,7 @@ import PortfolioPage from './pages/PortfolioPage'
 import AnalysePage from './pages/AnalysePage'
 import ScreenerPage from './pages/ScreenerPage'
 import AlertsPage from './pages/AlertsPage'
+import PeaPage from './pages/PeaPage'
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token')
@@ -77,6 +78,16 @@ export default function App() {
               }
             >
               <Route index element={<AlertsPage />} />
+            </Route>
+            <Route
+              path="/pea"
+              element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<PeaPage />} />
             </Route>
           </Routes>
         </PortfolioProvider>

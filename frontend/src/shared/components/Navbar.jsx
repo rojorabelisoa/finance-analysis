@@ -22,6 +22,7 @@ export default function Navbar() {
       <NavLink to="/analyse" className={linkCls} onClick={() => setOpen(false)}>Analyse</NavLink>
       <NavLink to="/screener" className={linkCls} onClick={() => setOpen(false)}>Screener</NavLink>
       <NavLink to="/alerts" className={linkCls} onClick={() => setOpen(false)}>Alertes</NavLink>
+      <NavLink to="/pea" className={linkCls} onClick={() => setOpen(false)}>PEA</NavLink>
       <span className="text-gray-500 text-sm">{user}</span>
       <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-red-400 transition-colors">
         Déconnexion

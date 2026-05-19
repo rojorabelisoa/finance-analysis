@@ -1,7 +1,9 @@
 package com.rojorabelisoa.finance.portfolio;
 
+import com.rojorabelisoa.finance.portfolio.dto.PortfolioHistoryDto;
 import com.rojorabelisoa.finance.portfolio.dto.PositionRequest;
 import com.rojorabelisoa.finance.portfolio.dto.PositionResponse;
+import com.rojorabelisoa.finance.settings.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import java.util.List;
 public class PositionController {
 
     private final PositionService positionService;
+    private final UserSettingsService userSettingsService;
 
     @GetMapping
     public ResponseEntity<List<PositionResponse>> getPositions() {
@@ -40,5 +43,11 @@ public class PositionController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         positionService.deletePosition(username, id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<PortfolioHistoryDto> getPortfolioHistory() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(userSettingsService.getPortfolioHistory(username));
     }
 }

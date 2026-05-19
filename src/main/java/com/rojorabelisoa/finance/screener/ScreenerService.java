@@ -64,9 +64,9 @@ public class ScreenerService {
 
     private List<ScreenerResultDto> fetchBatch(List<String> tickers) {
         try {
+            // stable: /quote?symbol=AAPL,MSFT,...
             String symbols = String.join(",", tickers);
-            // FMP batch quote: /api/v3/quote/AAPL,MSFT,...
-            List<?> results = fmp.getList("/v3/quote/" + symbols);
+            List<?> results = fmp.getList("/quote?symbol=" + symbols);
             if (results == null) return List.of();
 
             return results.stream()

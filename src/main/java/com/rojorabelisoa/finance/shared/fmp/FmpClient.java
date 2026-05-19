@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 public class FmpClient {
 
-    private static final String BASE = "https://financialmodelingprep.com/api";
+    private static final String BASE = "https://financialmodelingprep.com/stable";
 
     private final HttpClient http;
     private final ObjectMapper mapper;
@@ -47,6 +47,8 @@ public class FmpClient {
             String body = fetch(BASE + path + sep + "apikey=" + apiKey);
             Object parsed = mapper.readValue(body, Object.class);
             if (parsed instanceof List<?> l) return l;
+            // Some endpoints return a single object
+            if (parsed instanceof Map<?, ?> m) return List.of(m);
             return null;
         } catch (Exception e) {
             log.warn("FMP request failed for {}: {}", path, e.getMessage());
@@ -74,7 +76,7 @@ public class FmpClient {
 
         var response = http.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
-            throw new RuntimeException("HTTP " + response.statusCode());
+            throw new RuntimeException("HTTP " + response.statusCode() + " — " + response.body().substring(0, Math.min(100, response.body().length())));
         }
         return response.body();
     }

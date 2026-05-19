@@ -22,7 +22,8 @@ public class MarketService {
     @Cacheable(value = "quotes", unless = "#result.price() == null")
     public QuoteDto getQuote(String ticker) {
         try {
-            Map<?, ?> q = fmp.getFirst("/v3/quote/" + encode(ticker));
+            // stable: /quote?symbol=AAPL
+            Map<?, ?> q = fmp.getFirst("/quote?symbol=" + encode(ticker));
             if (q == null) return emptyQuote(ticker);
 
             return new QuoteDto(
@@ -43,15 +44,18 @@ public class MarketService {
     @Cacheable(value = "fundamentals", unless = "#result.name() == null")
     public FundamentalsDto getFundamentals(String ticker) {
         try {
-            Map<?, ?> quote = fmp.getFirst("/v3/quote/" + encode(ticker));
+            // Quote for price + pe + eps + 52w
+            Map<?, ?> quote = fmp.getFirst("/quote?symbol=" + encode(ticker));
             if (quote == null) return emptyFundamentals(ticker);
 
-            Map<?, ?> profile = fmp.getFirst("/v3/profile/" + encode(ticker));
+            // Profile for sector / industry / description / isEtf
+            Map<?, ?> profile = fmp.getFirst("/profile?symbol=" + encode(ticker));
 
             String name = profile != null ? str(profile, "companyName") : str(quote, "name");
             String sector = profile != null ? str(profile, "sector") : null;
             String industry = profile != null ? str(profile, "industry") : null;
-            String currency = profile != null ? str(profile, "currency") : null;
+            String currency = str(quote, "currency");
+            if (currency == null && profile != null) currency = str(profile, "currency");
             String description = profile != null ? str(profile, "description") : null;
             boolean isEtf = profile != null && Boolean.TRUE.equals(profile.get("isEtf"));
             Long marketCap = toLong(quote.get("marketCap"));
@@ -62,11 +66,11 @@ public class MarketService {
             Double week52High = toDouble(quote.get("yearHigh"));
             Double week52Low = toDouble(quote.get("yearLow"));
 
-            // Key metrics TTM for PEG and dividend
+            // Key metrics TTM for PEG + dividend
             Double pegRatio = null;
             Double dividendYield = null;
             try {
-                Map<?, ?> km = fmp.getFirst("/v3/key-metrics-ttm/" + encode(ticker));
+                Map<?, ?> km = fmp.getFirst("/key-metrics-ttm?symbol=" + encode(ticker));
                 if (km != null) {
                     pegRatio = toDouble(km.get("pegRatioTTM"));
                     dividendYield = toDouble(km.get("dividendYieldTTM"));
@@ -77,7 +81,7 @@ public class MarketService {
             Double revenueGrowth = null;
             Double epsGrowth = null;
             try {
-                Map<?, ?> growth = fmp.getFirst("/v3/financial-growth/" + encode(ticker) + "?limit=1");
+                Map<?, ?> growth = fmp.getFirst("/financial-growth?symbol=" + encode(ticker) + "&limit=1");
                 if (growth != null) {
                     revenueGrowth = toDouble(growth.get("revenueGrowth"));
                     epsGrowth = toDouble(growth.get("epsgrowth"));
@@ -98,7 +102,8 @@ public class MarketService {
     @Cacheable(value = "search", unless = "#result.isEmpty()")
     public List<SearchResultDto> searchSuggestions(String query) {
         try {
-            List<?> results = fmp.getList("/v3/search?query=" + encode(query) + "&limit=8");
+            // stable: /search-name?query=Apple&limit=8
+            List<?> results = fmp.getList("/search-name?query=" + encode(query) + "&limit=8");
             if (results == null) return List.of();
 
             return results.stream()
@@ -119,10 +124,9 @@ public class MarketService {
 
     public String resolveIsin(String isin) {
         try {
-            List<?> results = fmp.getList("/v3/search?query=" + encode(isin) + "&limit=1");
+            List<?> results = fmp.getList("/search-name?query=" + encode(isin) + "&limit=1");
             if (results == null || results.isEmpty()) return null;
-            Map<?, ?> first = (Map<?, ?>) results.get(0);
-            return str(first, "symbol");
+            return str((Map<?, ?>) results.get(0), "symbol");
         } catch (Exception e) {
             return null;
         }
@@ -132,7 +136,8 @@ public class MarketService {
     public Double getFxRate(String from, String to) {
         if (from.equals(to)) return 1.0;
         try {
-            Map<?, ?> q = fmp.getFirst("/v3/quote/" + from + to);
+            // FX pair quote e.g. EURUSD
+            Map<?, ?> q = fmp.getFirst("/quote?symbol=" + from + to);
             if (q != null && q.get("price") != null) return toDouble(q.get("price"));
             return 1.0;
         } catch (Exception e) {

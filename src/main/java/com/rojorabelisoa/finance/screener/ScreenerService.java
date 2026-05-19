@@ -24,7 +24,7 @@ public class ScreenerService {
 
     private final FmpClient fmp;
 
-    @Cacheable(value = "screener", key = "'all'")
+    @Cacheable(value = "screener", key = "'all'", unless = "#result.isEmpty()")
     public List<ScreenerResultDto> fetchAll() {
         List<String> tickers = loadTickers();
         List<ScreenerResultDto> results = new ArrayList<>();

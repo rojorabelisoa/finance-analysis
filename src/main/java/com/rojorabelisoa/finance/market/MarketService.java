@@ -106,7 +106,7 @@ public class MarketService {
     @Cacheable(value = "search", unless = "#result.isEmpty()")
     public List<SearchResultDto> searchSuggestions(String query) {
         try {
-            List<?> results = fmp.getList("/search-name?query=" + encode(query) + "&limit=8");
+            List<?> results = fmp.getList("/search-name?query=" + encode(query) + "&limit=6");
             if (results == null) return List.of();
 
             return results.stream()
@@ -118,7 +118,6 @@ public class MarketService {
                             "stock",
                             str(r, "exchangeShortName")
                     ))
-                    .limit(6)
                     .toList();
         } catch (Exception e) {
             return List.of();

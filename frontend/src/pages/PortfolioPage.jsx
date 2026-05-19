@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { usePortfolio } from '../context/PortfolioContext'
 import marketService from '../features/market/services/marketService'
 import AddPositionForm from '../features/portfolio/components/AddPositionForm'
@@ -83,7 +83,7 @@ export default function PortfolioPage() {
     return price / rate
   }
 
-  const enriched = positions.map((pos) => {
+  const enriched = useMemo(() => positions.map((pos) => {
     const quote = quotes[pos.ticker]
     const currentPriceEur = toEur(quote?.price, pos.currency)
     const avgPriceEur = toEur(pos.avgPrice, pos.currency)
@@ -92,7 +92,7 @@ export default function PortfolioPage() {
       valueEur: currentPriceEur !== null ? currentPriceEur * pos.shares : null,
       costEur: avgPriceEur !== null ? avgPriceEur * pos.shares : null,
     }
-  })
+  }), [positions, quotes, fxRates])
 
   const totalValue = enriched.reduce((s, p) => (p.valueEur !== null ? s + p.valueEur : s), 0)
   const totalCost = enriched.reduce((s, p) => (p.costEur !== null ? s + p.costEur : s), 0)

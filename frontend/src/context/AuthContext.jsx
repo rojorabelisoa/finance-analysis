@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer } from 'react'
+import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext(null)
 
@@ -17,11 +18,12 @@ function authReducer(state, action) {
   }
 }
 
-export function AuthProvider({ children }) {
+function AuthProviderInner({ children }) {
   const [state, dispatch] = useReducer(authReducer, {
     token: localStorage.getItem('token'),
     username: localStorage.getItem('username'),
   })
+  const navigate = useNavigate()
 
   function login(token, username) {
     dispatch({ type: 'LOGIN', payload: { token, username } })
@@ -29,13 +31,27 @@ export function AuthProvider({ children }) {
 
   function logout() {
     dispatch({ type: 'LOGOUT' })
+    navigate('/login', { replace: true })
   }
+
+  useEffect(() => {
+    function handleForceLogout() {
+      dispatch({ type: 'LOGOUT' })
+      navigate('/login', { replace: true })
+    }
+    window.addEventListener('finance:logout', handleForceLogout)
+    return () => window.removeEventListener('finance:logout', handleForceLogout)
+  }, [navigate])
 
   return (
     <AuthContext.Provider value={{ ...state, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
+}
+
+export function AuthProvider({ children }) {
+  return <AuthProviderInner>{children}</AuthProviderInner>
 }
 
 export function useAuth() {

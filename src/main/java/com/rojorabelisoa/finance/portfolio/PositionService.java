@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
@@ -29,6 +30,15 @@ public class PositionService {
     public PositionResponse addPosition(String username, PositionRequest request) {
         User user = loadUser(username);
 
+        LocalDate buyDate = null;
+        if (request.buyDate() != null && !request.buyDate().isBlank()) {
+            try {
+                buyDate = LocalDate.parse(request.buyDate());
+            } catch (DateTimeParseException e) {
+                throw new AppException("Invalid buyDate format, expected YYYY-MM-DD", 400);
+            }
+        }
+
         Position position = Position.builder()
                 .user(user)
                 .ticker(request.ticker())
@@ -39,7 +49,7 @@ public class PositionService {
                 .shares(request.shares())
                 .avgPrice(request.avgPrice())
                 .currency(request.currency())
-                .buyDate(request.buyDate() != null ? LocalDate.parse(request.buyDate()) : null)
+                .buyDate(buyDate)
                 .notes(request.notes())
                 .build();
 
@@ -48,14 +58,8 @@ public class PositionService {
 
     public void deletePosition(String username, Long id) {
         User user = loadUser(username);
-
-        Position position = positionRepository.findById(id)
+        Position position = positionRepository.findByIdAndUser(id, user)
                 .orElseThrow(() -> new AppException("Position not found", 404));
-
-        if (!position.getUser().getId().equals(user.getId())) {
-            throw new AppException("Access denied", 403);
-        }
-
         positionRepository.delete(position);
     }
 

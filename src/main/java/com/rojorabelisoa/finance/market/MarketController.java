@@ -44,11 +44,11 @@ public class MarketController {
         return ResponseEntity.ok(marketService.getFxRate(from, to));
     }
 
+    // Debug endpoint — enabled only via ?debug=true on authenticated requests (dev use only)
     @GetMapping("/debug/{ticker}")
     public ResponseEntity<Map<String, Object>> debug(@PathVariable String ticker) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("ticker", ticker);
-        result.put("quote_raw", fmp.rawGet("/quote?symbol=" + ticker));
         result.put("profile_raw", fmp.rawGet("/profile?symbol=" + ticker));
         result.put("quote_parsed", marketService.getQuote(ticker));
         return ResponseEntity.ok(result);

@@ -9,15 +9,18 @@ import com.rojorabelisoa.finance.shared.exception.AppException;
 import com.rojorabelisoa.finance.user.User;
 import com.rojorabelisoa.finance.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AlertService {
 
     private final AlertRepository alertRepository;
@@ -53,6 +56,7 @@ public class AlertService {
     }
 
     @Scheduled(fixedDelay = 3600000)
+    @Transactional
     public void checkAlerts() {
         List<Alert> alerts = alertRepository.findByActiveTrue();
         for (Alert alert : alerts) {
@@ -83,7 +87,7 @@ public class AlertService {
                             message);
                 }
             } catch (Exception e) {
-                // ne pas stopper le batch si un ticker échoue
+                log.error("Alert check failed for ticker={}: {}", alert.getTicker(), e.getMessage());
             }
         }
     }

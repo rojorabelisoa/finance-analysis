@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   AreaChart,
   Area,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -18,6 +16,7 @@ import {
 } from 'recharts'
 import Card from '../shared/components/Card'
 import api from '../shared/hooks/useApi'
+import { usePortfolio } from '../context/PortfolioContext'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -67,8 +66,8 @@ const DONUT_COLORS = [
 // ─── Section 1: Portfolio History Chart ─────────────────────────────────────
 
 function HistoriqueSection() {
+  const { positions } = usePortfolio()
   const [history, setHistory] = useState(null)
-  const [positions, setPositions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -77,12 +76,8 @@ function HistoriqueSection() {
       setLoading(true)
       setError('')
       try {
-        const [histRes, posRes] = await Promise.allSettled([
-          api.get('/portfolio/history'),
-          api.get('/positions'),
-        ])
-        if (histRes.status === 'fulfilled') setHistory(histRes.value.data)
-        if (posRes.status === 'fulfilled') setPositions(posRes.value.data || [])
+        const res = await api.get('/portfolio/history')
+        setHistory(res.data)
       } catch {
         setError('Impossible de charger les données.')
       } finally {
@@ -98,15 +93,12 @@ function HistoriqueSection() {
   const snapshots = history?.snapshots || []
   const totalInvested = history?.totalInvested || 0
   const nbPositions = positions.length
+  const currentValue = history?.totalCurrentValue ?? null
 
-  // Build chart data: cumulative invested over time
   const chartData = snapshots.map((s) => ({
     date: formatMonthYear(s.date),
     investi: s.invested,
   }))
-
-  // Last point gets current value marker (we use totalInvested as fallback)
-  const currentValue = history?.totalCurrentValue ?? null
 
   return (
     <div className="flex flex-col gap-6">
@@ -192,10 +184,10 @@ function DcaSection() {
     rate: 7,
   })
 
-  function compute() {
+  const data = useMemo(() => {
     const { initialAmount, monthly, years, rate } = form
     const r = rate / 100
-    const data = []
+    const result = []
     for (let n = 0; n <= years; n++) {
       const value =
         r === 0
@@ -203,12 +195,11 @@ function DcaSection() {
           : initialAmount * Math.pow(1 + r, n) +
             monthly * ((Math.pow(1 + r / 12, n * 12) - 1) / (r / 12))
       const invested = initialAmount + monthly * 12 * n
-      data.push({ year: n, value: Math.round(value), invested: Math.round(invested) })
+      result.push({ year: n, value: Math.round(value), invested: Math.round(invested) })
     }
-    return data
-  }
+    return result
+  }, [form])
 
-  const data = compute()
   const last = data[data.length - 1]
   const finalValue = last?.value ?? 0
   const totalInvested = last?.invested ?? 0
@@ -348,8 +339,9 @@ const DEFAULT_TARGETS = [
 ]
 
 function AllocationSection() {
+  const { positions } = usePortfolio()
   const [targets, setTargets] = useState(DEFAULT_TARGETS)
-  const [positions, setPositions] = useState([])
+  const [fxRates, setFxRates] = useState({})
   const [nextDeposit, setNextDeposit] = useState(200)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
@@ -358,22 +350,14 @@ function AllocationSection() {
   useEffect(() => {
     async function load() {
       try {
-        const [settingsRes, posRes] = await Promise.allSettled([
-          api.get('/settings'),
-          api.get('/positions'),
-        ])
-        if (settingsRes.status === 'fulfilled') {
-          const data = settingsRes.value.data
-          if (data.allocationTargetsJson) {
-            try {
-              setTargets(JSON.parse(data.allocationTargetsJson))
-            } catch {
-              // keep defaults
-            }
+        const settingsRes = await api.get('/settings')
+        const data = settingsRes.data
+        if (data.allocationTargetsJson) {
+          try {
+            setTargets(JSON.parse(data.allocationTargetsJson))
+          } catch {
+            // keep defaults
           }
-        }
-        if (posRes.status === 'fulfilled') {
-          setPositions(posRes.value.data || [])
         }
       } finally {
         setLoading(false)
@@ -381,6 +365,24 @@ function AllocationSection() {
     }
     load()
   }, [])
+
+  // Fetch FX rates for non-EUR positions
+  useEffect(() => {
+    const currencies = [...new Set(positions.map((p) => p.currency).filter((c) => c && c !== 'EUR'))]
+    if (currencies.length === 0) return
+
+    Promise.allSettled(
+      currencies.map((c) =>
+        api.get(`/market/fx?from=${c}&to=EUR`).then((r) => ({ currency: c, rate: r.data }))
+      )
+    ).then((results) => {
+      const rates = {}
+      results.forEach((r) => {
+        if (r.status === 'fulfilled') rates[r.value.currency] = r.value.rate
+      })
+      setFxRates(rates)
+    })
+  }, [positions])
 
   const totalTarget = targets.reduce((s, t) => s + (parseFloat(t.targetPercent) || 0), 0)
   const totalOk = Math.abs(totalTarget - 100) < 0.01
@@ -398,6 +400,10 @@ function AllocationSection() {
   }
 
   async function saveSettings() {
+    if (!totalOk) {
+      setSaveMsg('Le total doit être exactement 100 %.')
+      return
+    }
     setSaving(true)
     setSaveMsg('')
     try {
@@ -405,23 +411,27 @@ function AllocationSection() {
       setSaveMsg('Sauvegardé ✓')
       setTimeout(() => setSaveMsg(''), 2500)
     } catch {
-      setSaveMsg("Erreur lors de la sauvegarde.")
+      setSaveMsg('Erreur lors de la sauvegarde.')
     } finally {
       setSaving(false)
     }
   }
 
-  // Compute actual allocation from positions (by ticker)
-  const totalPositionValue = positions.reduce((s, p) => s + (p.costPrice || p.avgPrice || 0) * (p.shares || p.quantity || 0), 0)
+  // Compute actual allocation: cost basis converted to EUR
+  function toEur(price, currency) {
+    if (!price) return 0
+    if (!currency || currency === 'EUR') return price
+    const rate = fxRates[currency]
+    return rate ? price / rate : price // fallback: treat as EUR if rate unknown
+  }
 
   const actualByTicker = {}
   positions.forEach((p) => {
-    const ticker = p.ticker
-    const val = (p.costPrice || p.avgPrice || 0) * (p.shares || p.quantity || 0)
-    actualByTicker[ticker] = (actualByTicker[ticker] || 0) + val
+    const val = toEur(p.avgPrice * p.shares, p.currency)
+    actualByTicker[p.ticker] = (actualByTicker[p.ticker] || 0) + val
   })
+  const totalPositionValue = Object.values(actualByTicker).reduce((s, v) => s + v, 0)
 
-  // Match to targets
   const comparisonData = targets.map((t) => {
     const actual = totalPositionValue > 0
       ? ((actualByTicker[t.ticker] || 0) / totalPositionValue) * 100
@@ -433,7 +443,6 @@ function AllocationSection() {
     }
   })
 
-  // Rebalancing suggestion
   const suggestions = targets
     .map((t) => {
       const actualVal = actualByTicker[t.ticker] || 0
@@ -443,7 +452,6 @@ function AllocationSection() {
     })
     .filter((s) => s.amount > 0)
 
-  // Donut data
   const donutTarget = targets.map((t, i) => ({
     name: t.label || t.ticker,
     value: parseFloat(t.targetPercent) || 0,
@@ -535,16 +543,20 @@ function AllocationSection() {
             >
               {saving ? 'Sauvegarde...' : 'Sauvegarder'}
             </button>
-            {saveMsg && <span className="text-xs text-emerald-400">{saveMsg}</span>}
+            {saveMsg && (
+              <span className={`text-xs ${saveMsg.startsWith('Erreur') || saveMsg.startsWith('Le total') ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {saveMsg}
+              </span>
+            )}
           </div>
         </div>
       </Card>
 
       {/* Comparison charts */}
       <Card>
-        <h3 className="text-gray-200 font-medium mb-4">Allocation actuelle vs cible</h3>
+        <h3 className="text-gray-200 font-medium mb-1">Allocation actuelle vs cible</h3>
+        <p className="text-xs text-gray-500 mb-4">Basé sur le coût d'achat en EUR</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Target donut */}
           <div>
             <p className="text-xs text-gray-400 text-center mb-2">Cible</p>
             <ResponsiveContainer width="100%" height={200}>
@@ -572,7 +584,6 @@ function AllocationSection() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          {/* Actual donut */}
           <div>
             <p className="text-xs text-gray-400 text-center mb-2">Actuelle</p>
             <ResponsiveContainer width="100%" height={200}>
@@ -607,7 +618,6 @@ function AllocationSection() {
           </div>
         </div>
 
-        {/* Bar comparison */}
         {comparisonData.length > 0 && (
           <div className="mt-4">
             <ResponsiveContainer width="100%" height={160}>
@@ -707,7 +717,7 @@ function FiscalSection() {
       await api.put('/settings', { peaOpeningDate: openingDate })
       await load()
     } catch {
-      setSaveError("Erreur lors de la sauvegarde.")
+      setSaveError('Erreur lors de la sauvegarde.')
     } finally {
       setSaving(false)
     }
@@ -715,7 +725,6 @@ function FiscalSection() {
 
   if (loading) return <p className="text-gray-500 text-sm py-8 text-center">Chargement...</p>
 
-  // No opening date — show form
   if (!data || !data.openingDate) {
     return (
       <div className="flex flex-col gap-6">
@@ -761,7 +770,6 @@ function FiscalSection() {
     <div className="flex flex-col gap-6">
       <h2 className="text-gray-100 font-semibold text-lg">Calendrier fiscal PEA</h2>
 
-      {/* Progress toward 5 years */}
       <Card>
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-medium text-gray-200">Progression vers 5 ans</p>
@@ -780,7 +788,6 @@ function FiscalSection() {
         )}
       </Card>
 
-      {/* Info cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="flex flex-col gap-1 p-5">
           <p className={labelCls}>Date d'ouverture</p>
@@ -816,7 +823,6 @@ function FiscalSection() {
         </Card>
       </div>
 
-      {/* PEA rules info box */}
       <Card>
         <h3 className="text-gray-200 font-medium mb-3">Règles fiscales du PEA</h3>
         <div className="flex flex-col gap-4">
@@ -862,7 +868,6 @@ export default function PeaPage() {
     <div className="flex flex-col gap-6">
       <h1 className="text-xl font-bold text-gray-100">PEA</h1>
 
-      {/* Tab bar */}
       <div className="flex gap-1 bg-gray-800 rounded-xl p-1 border border-gray-700 w-fit">
         {TABS.map((tab) => (
           <button
@@ -879,7 +884,6 @@ export default function PeaPage() {
         ))}
       </div>
 
-      {/* Tab content */}
       {activeTab === 'historique' && <HistoriqueSection />}
       {activeTab === 'dca' && <DcaSection />}
       {activeTab === 'allocation' && <AllocationSection />}

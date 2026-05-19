@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { PortfolioProvider } from './context/PortfolioContext'
 import Navbar from './shared/components/Navbar'
 import LoginPage from './pages/LoginPage'
@@ -12,7 +12,7 @@ import AlertsPage from './pages/AlertsPage'
 import PeaPage from './pages/PeaPage'
 
 function PrivateRoute({ children }) {
-  const token = localStorage.getItem('token')
+  const { token } = useAuth()
   if (!token) {
     return <Navigate to="/login" replace />
   }
@@ -30,6 +30,14 @@ function Layout() {
   )
 }
 
+function PrivateLayout() {
+  return (
+    <PrivateRoute>
+      <Layout />
+    </PrivateRoute>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -39,55 +47,12 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/" element={<Navigate to="/portfolio" replace />} />
-            <Route
-              path="/portfolio"
-              element={
-                <PrivateRoute>
-                  <Layout />
-                </PrivateRoute>
-              }
-            >
-              <Route index element={<PortfolioPage />} />
-            </Route>
-            <Route
-              path="/analyse"
-              element={
-                <PrivateRoute>
-                  <Layout />
-                </PrivateRoute>
-              }
-            >
-              <Route index element={<AnalysePage />} />
-            </Route>
-            <Route
-              path="/screener"
-              element={
-                <PrivateRoute>
-                  <Layout />
-                </PrivateRoute>
-              }
-            >
-              <Route index element={<ScreenerPage />} />
-            </Route>
-            <Route
-              path="/alerts"
-              element={
-                <PrivateRoute>
-                  <Layout />
-                </PrivateRoute>
-              }
-            >
-              <Route index element={<AlertsPage />} />
-            </Route>
-            <Route
-              path="/pea"
-              element={
-                <PrivateRoute>
-                  <Layout />
-                </PrivateRoute>
-              }
-            >
-              <Route index element={<PeaPage />} />
+            <Route element={<PrivateLayout />}>
+              <Route path="/portfolio" element={<PortfolioPage />} />
+              <Route path="/analyse" element={<AnalysePage />} />
+              <Route path="/screener" element={<ScreenerPage />} />
+              <Route path="/alerts" element={<AlertsPage />} />
+              <Route path="/pea" element={<PeaPage />} />
             </Route>
           </Routes>
         </PortfolioProvider>

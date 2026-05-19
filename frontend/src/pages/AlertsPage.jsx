@@ -27,13 +27,22 @@ export default function AlertsPage() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    const threshold = parseFloat(form.threshold)
+    if (!form.ticker.trim()) {
+      setError('Le ticker est requis.')
+      return
+    }
+    if (isNaN(threshold) || threshold < 0) {
+      setError('Le seuil P/E doit être un nombre positif.')
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
       const alert = await alertService.createAlert({
         ticker: form.ticker.trim().toUpperCase(),
         alertType: form.alertType,
-        threshold: parseFloat(form.threshold),
+        threshold,
       })
       setAlerts((prev) => [alert, ...prev])
       setForm({ ticker: '', alertType: 'PE_THRESHOLD', threshold: '' })

@@ -3,7 +3,7 @@ package com.rojorabelisoa.finance.market;
 import com.rojorabelisoa.finance.market.dto.FundamentalsDto;
 import com.rojorabelisoa.finance.market.dto.QuoteDto;
 import com.rojorabelisoa.finance.market.dto.SearchResultDto;
-import com.rojorabelisoa.finance.shared.yahoo.YahooFinanceClient;
+import com.rojorabelisoa.finance.shared.fmp.FmpClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +22,7 @@ import java.util.Map;
 public class MarketController {
 
     private final MarketService marketService;
-    private final YahooFinanceClient yahoo;
+    private final FmpClient fmp;
 
     @GetMapping("/quote/{ticker}")
     public ResponseEntity<QuoteDto> getQuote(@PathVariable String ticker) {
@@ -47,8 +47,7 @@ public class MarketController {
     @GetMapping("/debug/{ticker}")
     public ResponseEntity<Map<String, Object>> debug(@PathVariable String ticker) {
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("crumb", yahoo.getCrumb());
-        result.put("quote_raw", yahoo.rawGet("/v7/finance/quote?symbols=" + ticker));
+        result.put("fmp_quote_raw", fmp.rawGet("/v3/quote/" + ticker));
         result.put("quote_parsed", marketService.getQuote(ticker));
         return ResponseEntity.ok(result);
     }

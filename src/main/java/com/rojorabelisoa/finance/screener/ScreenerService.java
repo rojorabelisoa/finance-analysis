@@ -1,7 +1,7 @@
 package com.rojorabelisoa.finance.screener;
 
 import com.rojorabelisoa.finance.screener.dto.ScreenerResultDto;
-import com.rojorabelisoa.finance.shared.yahoo.YahooFinanceClient;
+import com.rojorabelisoa.finance.shared.fmp.FmpClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -22,13 +22,12 @@ public class ScreenerService {
 
     private static final int BATCH_SIZE = 100;
 
-    private final YahooFinanceClient yahoo;
+    private final FmpClient fmp;
 
     @Cacheable(value = "screener", key = "'all'")
     public List<ScreenerResultDto> fetchAll() {
         List<String> tickers = loadTickers();
         List<ScreenerResultDto> results = new ArrayList<>();
-
         for (int i = 0; i < tickers.size(); i += BATCH_SIZE) {
             List<String> batch = tickers.subList(i, Math.min(i + BATCH_SIZE, tickers.size()));
             results.addAll(fetchBatch(batch));
@@ -66,26 +65,21 @@ public class ScreenerService {
     private List<ScreenerResultDto> fetchBatch(List<String> tickers) {
         try {
             String symbols = String.join(",", tickers);
-            Map<?, ?> body = yahoo.get(
-                    "/v7/finance/quote?symbols=" + symbols + "&fields=shortName,regularMarketPrice,trailingPE,revenueGrowth,earningsGrowth,marketCap,currency");
-
-            if (body == null) return List.of();
-            Map<?, ?> quoteResponse = (Map<?, ?>) body.get("quoteResponse");
-            if (quoteResponse == null) return List.of();
-            List<?> results = (List<?>) quoteResponse.get("result");
+            // FMP batch quote: /api/v3/quote/AAPL,MSFT,...
+            List<?> results = fmp.getList("/v3/quote/" + symbols);
             if (results == null) return List.of();
 
             return results.stream()
                     .filter(r -> r instanceof Map<?, ?>)
                     .map(r -> (Map<?, ?>) r)
                     .map(r -> new ScreenerResultDto(
-                            (String) r.get("symbol"),
-                            (String) r.get("shortName"),
-                            toDouble(r.get("regularMarketPrice")),
-                            (String) r.get("currency"),
-                            toDouble(r.get("trailingPE")),
-                            toDouble(r.get("revenueGrowth")),
-                            toDouble(r.get("earningsGrowth")),
+                            str(r, "symbol"),
+                            str(r, "name"),
+                            toDouble(r.get("price")),
+                            str(r, "currency"),
+                            toDouble(r.get("pe")),
+                            null,  // revenueGrowth not in batch quote — needs separate call
+                            null,  // epsGrowth not in batch quote
                             toLong(r.get("marketCap"))
                     ))
                     .collect(Collectors.toList());
@@ -106,6 +100,11 @@ public class ScreenerService {
             log.error("Failed to load sp500.txt: {}", e.getMessage());
             return List.of();
         }
+    }
+
+    private String str(Map<?, ?> map, String key) {
+        Object v = map.get(key);
+        return v instanceof String s ? s : null;
     }
 
     private Double toDouble(Object v) {

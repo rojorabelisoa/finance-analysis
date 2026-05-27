@@ -51,7 +51,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (JwtException e) {
-            log.debug("Invalid JWT token: {}", e.getMessage());
+            log.warn("Rejected JWT on {}: {}", request.getRequestURI(), e.getMessage());
         } catch (UsernameNotFoundException e) {
             log.debug("JWT references unknown user: {}", e.getMessage());
         } catch (Exception e) {

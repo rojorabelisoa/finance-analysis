@@ -27,10 +27,8 @@ export default function AnalysePage() {
       let resolvedTicker = raw
       const isIsin = /^[A-Z]{2}[A-Z0-9]{10}$/.test(raw)
       if (isIsin) {
-        const results = await marketService.searchTicker(raw)
-        if (results && results.length > 0) {
-          resolvedTicker = results[0].ticker || results[0].symbol || raw
-        }
+        const ticker = await marketService.resolveIsin(raw).catch(() => null)
+        if (ticker) resolvedTicker = ticker
       }
       const [quoteData, fundamentalsData, technicalData] = await Promise.all([
         marketService.getQuote(resolvedTicker),

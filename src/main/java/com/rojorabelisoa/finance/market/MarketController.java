@@ -41,6 +41,13 @@ public class MarketController {
         return ResponseEntity.ok(marketService.searchSuggestions(q.trim().toUpperCase()));
     }
 
+    @GetMapping("/isin/{isin}")
+    public ResponseEntity<Map<String, String>> resolveIsin(@PathVariable String isin) {
+        String ticker = marketService.resolveIsin(isin.toUpperCase());
+        if (ticker == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(Map.of("ticker", ticker));
+    }
+
     @GetMapping("/fx")
     public ResponseEntity<Double> getFxRate(@RequestParam String from, @RequestParam String to) {
         return ResponseEntity.ok(marketService.getFxRate(from, to));

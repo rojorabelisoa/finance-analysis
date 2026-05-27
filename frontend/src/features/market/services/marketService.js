@@ -16,6 +16,11 @@ const marketService = {
     return response.data
   },
 
+  async resolveIsin(isin) {
+    const response = await api.get(`/market/isin/${isin}`)
+    return response.data.ticker
+  },
+
   async getTechnical(ticker, limit = 200) {
     const response = await api.get(`/market/technical/${ticker}`, { params: { limit } })
     return response.data

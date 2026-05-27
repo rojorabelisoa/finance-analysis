@@ -126,7 +126,7 @@ public class MarketService {
 
     public String resolveIsin(String isin) {
         try {
-            List<?> results = fmp.getList("/search-name?query=" + encode(isin) + "&limit=1");
+            List<?> results = fmp.getList("/search?query=" + encode(isin) + "&limit=1");
             if (results == null || results.isEmpty()) return null;
             return str((Map<?, ?>) results.get(0), "symbol");
         } catch (Exception e) {

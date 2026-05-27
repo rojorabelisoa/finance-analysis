@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import BackendStatus from './BackendStatus'
 
 export default function Navbar() {
   const { username: user, logout } = useAuth()
@@ -56,6 +57,8 @@ export default function Navbar() {
               {links}
             </div>
           )}
+
+          <BackendStatus />
 
           {user && (
             <button

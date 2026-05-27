@@ -38,7 +38,7 @@ public class TechnicalAnalysisService {
     private static final int ATR_PERIOD = 14;
     private static final double DISPLACEMENT_ATR = 1.5;
 
-    @Cacheable(value = "technical", unless = "#result.candles().isEmpty()")
+    @Cacheable(value = "technical", unless = "#result.candles().size() < 20")
     public TechnicalAnalysisDto analyze(String ticker, int limit) {
         List<CandleDto> candles = fetchCandles(ticker, limit);
         if (candles.size() < 20) {
@@ -67,7 +67,10 @@ public class TechnicalAnalysisService {
     // ---------------------------------------------------------------- data
 
     private List<CandleDto> fetchCandles(String ticker, int limit) {
-        List<?> raw = fmp.getList("/historical-price-eod/full?symbol=" + encode(ticker));
+        // Bound the request server-side: ~1.6 calendar days per trading day, plus a buffer
+        // for weekends/holidays, so FMP returns roughly `limit` candles instead of full history.
+        String from = LocalDate.now(ZoneOffset.UTC).minusDays((long) (limit * 1.6) + 10).toString();
+        List<?> raw = fmp.getList("/historical-price-eod/full?symbol=" + encode(ticker) + "&from=" + from);
         if (raw == null || raw.isEmpty()) return List.of();
 
         List<CandleDto> candles = new ArrayList<>();
@@ -140,7 +143,7 @@ public class TechnicalAnalysisService {
             double price = cl[0] / cl[1];
             String type = price >= lastPrice ? "RESISTANCE" : "SUPPORT";
             double strength = (double) touches / maxTouches;
-            levels.add(new Level(round(price), type, touches, round2(strength)));
+            levels.add(new Level(round(price), type, touches, round(strength)));
         }
         levels.sort(Comparator.comparingInt(Level::touches).reversed());
         return levels.size() > 8 ? new ArrayList<>(levels.subList(0, 8)) : levels;
@@ -160,11 +163,13 @@ public class TechnicalAnalysisService {
             double moveDown = candle.close() - minLow(c, i + 1, i + 3);
 
             if (bearish && moveUp > atr * DISPLACEMENT_ATR) {
-                boolean mitigated = minLow(c, i + 4, n - 1) <= candle.high();
+                // A demand block is invalidated only once price sweeps below its low.
+                boolean mitigated = minLow(c, i + 4, n - 1) <= candle.low();
                 out.add(new OrderBlock("BULLISH", round(candle.high()), round(candle.low()),
                         candle.date(), candle.time(), mitigated));
             } else if (bullish && moveDown > atr * DISPLACEMENT_ATR) {
-                boolean mitigated = maxHigh(c, i + 4, n - 1) >= candle.low();
+                // A supply block is invalidated only once price sweeps above its high.
+                boolean mitigated = maxHigh(c, i + 4, n - 1) >= candle.high();
                 out.add(new OrderBlock("BEARISH", round(candle.high()), round(candle.low()),
                         candle.date(), candle.time(), mitigated));
             }
@@ -181,7 +186,11 @@ public class TechnicalAnalysisService {
         int n = c.size();
         for (int i = 1; i < n - 1; i++) {
             CandleDto prev = c.get(i - 1);
+            CandleDto mid = c.get(i);
             CandleDto next = c.get(i + 1);
+            // The middle candle must be the displacement bar that created the gap.
+            boolean displacement = Math.abs(mid.close() - mid.open()) > atr * 0.5;
+            if (!displacement) continue;
             // Bullish FVG: gap between prev.high and next.low
             if (next.low() > prev.high() && (next.low() - prev.high()) > atr * 0.25) {
                 double bottom = prev.high();
@@ -301,7 +310,7 @@ public class TechnicalAnalysisService {
                 + ". Invalidation sous le stop.";
 
         return new TradeSetup("LONG", round(entry), round(stop), round(resistance),
-                round2(rr), confidence, rationale);
+                round(rr), confidence, rationale);
     }
 
     private TradeSetup buildShort(double price, double atr, String trend,
@@ -337,7 +346,7 @@ public class TechnicalAnalysisService {
                 + ". Invalidation au-dessus du stop.";
 
         return new TradeSetup("SHORT", round(entry), round(stop), round(support),
-                round2(rr), confidence, rationale);
+                round(rr), confidence, rationale);
     }
 
     // ---------------------------------------------------------------- helpers
@@ -440,10 +449,6 @@ public class TechnicalAnalysisService {
     }
 
     private double round(double v) {
-        return Math.round(v * 100.0) / 100.0;
-    }
-
-    private double round2(double v) {
         return Math.round(v * 100.0) / 100.0;
     }
 }

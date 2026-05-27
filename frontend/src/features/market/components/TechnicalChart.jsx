@@ -38,7 +38,7 @@ function CandleTooltip({ active, payload }) {
 export default function TechnicalChart({ analysis }) {
   const data = useMemo(
     () => (analysis?.candles || []).map((c, i) => ({ ...c, idx: i })),
-    [analysis]
+    [analysis?.candles]
   )
 
   const timeToIdx = useMemo(() => {
@@ -87,16 +87,16 @@ export default function TechnicalChart({ analysis }) {
     const elements = []
 
     // --- Order blocks (zones extending to the right edge) ---
-    for (const ob of analysis.orderBlocks || []) {
+    ;(analysis.orderBlocks || []).forEach((ob, i) => {
       const idx = timeToIdx.get(ob.time)
-      if (idx === undefined) continue
+      if (idx === undefined || ob.top == null || ob.bottom == null) return
       const x0 = xScale(idx) - candleW / 2
       const yTop = yScale(ob.top)
       const yBot = yScale(ob.bottom)
       const bull = ob.direction === 'BULLISH'
       elements.push(
         <rect
-          key={`ob-${ob.time}-${ob.direction}`}
+          key={`ob-${i}`}
           x={x0}
           y={Math.min(yTop, yBot)}
           width={Math.max(0, right - x0)}
@@ -107,20 +107,20 @@ export default function TechnicalChart({ analysis }) {
           strokeWidth={1}
         />
       )
-    }
+    })
 
     // --- Fair value gaps ---
-    for (const fvg of analysis.fairValueGaps || []) {
-      if (fvg.filled) continue
+    ;(analysis.fairValueGaps || []).forEach((fvg, i) => {
+      if (fvg.filled || fvg.top == null || fvg.bottom == null) return
       const idx = timeToIdx.get(fvg.time)
-      if (idx === undefined) continue
+      if (idx === undefined) return
       const x0 = xScale(idx) - candleW / 2
       const yTop = yScale(fvg.top)
       const yBot = yScale(fvg.bottom)
       const bull = fvg.direction === 'BULLISH'
       elements.push(
         <rect
-          key={`fvg-${fvg.time}-${fvg.direction}`}
+          key={`fvg-${i}`}
           x={x0}
           y={Math.min(yTop, yBot)}
           width={Math.max(0, right - x0)}
@@ -128,15 +128,16 @@ export default function TechnicalChart({ analysis }) {
           fill={bull ? 'rgba(59,130,246,0.10)' : 'rgba(234,179,8,0.10)'}
         />
       )
-    }
+    })
 
     // --- Support / resistance levels ---
-    for (const lvl of analysis.levels || []) {
+    ;(analysis.levels || []).forEach((lvl, i) => {
+      if (lvl.price == null) return
       const y = yScale(lvl.price)
       const color = lvl.type === 'SUPPORT' ? BULL : '#f59e0b'
       elements.push(
         <line
-          key={`lvl-${lvl.type}-${lvl.price}`}
+          key={`lvl-${i}`}
           x1={left}
           x2={right}
           y1={y}
@@ -147,11 +148,11 @@ export default function TechnicalChart({ analysis }) {
         />
       )
       elements.push(
-        <text key={`lvltxt-${lvl.type}-${lvl.price}`} x={left + 4} y={y - 3} fill={color} fontSize={9} opacity={0.8}>
+        <text key={`lvltxt-${i}`} x={left + 4} y={y - 3} fill={color} fontSize={9} opacity={0.8}>
           {lvl.type === 'SUPPORT' ? 'S' : 'R'} {fmt(lvl.price)}
         </text>
       )
-    }
+    })
 
     // --- Trade setup lines (entry / SL / TP of the first setup) ---
     const setup = (analysis.setups || [])[0]
@@ -161,18 +162,19 @@ export default function TechnicalChart({ analysis }) {
         { p: setup.stopLoss, c: BEAR, label: `SL ${fmt(setup.stopLoss)}`, dash: '4 3' },
         { p: setup.takeProfit, c: BULL, label: `TP ${fmt(setup.takeProfit)}`, dash: '4 3' },
       ]
-      for (const ln of lines) {
+      lines.forEach((ln, i) => {
+        if (ln.p == null) return
         const y = yScale(ln.p)
         elements.push(
-          <line key={`set-${ln.label}`} x1={left} x2={right} y1={y} y2={y}
+          <line key={`set-${i}`} x1={left} x2={right} y1={y} y2={y}
             stroke={ln.c} strokeWidth={1.2} strokeDasharray={ln.dash} strokeOpacity={0.9} />
         )
         elements.push(
-          <text key={`settxt-${ln.label}`} x={right - 4} y={y - 3} fill={ln.c} fontSize={9} textAnchor="end" fontWeight="600">
+          <text key={`settxt-${i}`} x={right - 4} y={y - 3} fill={ln.c} fontSize={9} textAnchor="end" fontWeight="600">
             {ln.label}
           </text>
         )
-      }
+      })
     }
 
     // --- Candles (drawn last, on top of zones) ---

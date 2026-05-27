@@ -81,7 +81,7 @@ export default function TradeSetupPanel({ analysis }) {
       {setups.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2">
           {setups.map((s) => (
-            <SetupCard key={s.direction} setup={s} />
+            <SetupCard key={`${s.direction}-${s.entry}`} setup={s} />
           ))}
         </div>
       ) : (

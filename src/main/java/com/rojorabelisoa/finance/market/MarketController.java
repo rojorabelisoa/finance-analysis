@@ -50,7 +50,8 @@ public class MarketController {
     public ResponseEntity<TechnicalAnalysisDto> getTechnical(
             @PathVariable String ticker,
             @RequestParam(defaultValue = "200") int limit) {
-        return ResponseEntity.ok(technicalAnalysisService.analyze(ticker.toUpperCase(), limit));
+        int safeLimit = Math.min(Math.max(limit, 20), 1000);
+        return ResponseEntity.ok(technicalAnalysisService.analyze(ticker.toUpperCase(), safeLimit));
     }
 
     // Debug endpoint — enabled only via ?debug=true on authenticated requests (dev use only)

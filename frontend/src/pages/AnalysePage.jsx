@@ -78,7 +78,7 @@ export default function AnalysePage() {
 
       {quote && <QuoteCard quote={quote} />}
 
-      {technical && technical.candles && technical.candles.length > 0 && (
+      {technical && (
         <Card>
           <h3 className="text-slate-100 font-semibold mb-1">Analyse technique — action sur les prix</h3>
           <p className="text-xs text-slate-500 mb-4">

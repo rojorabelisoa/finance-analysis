@@ -3,6 +3,7 @@ package com.rojorabelisoa.finance.market;
 import com.rojorabelisoa.finance.market.dto.FundamentalsDto;
 import com.rojorabelisoa.finance.market.dto.QuoteDto;
 import com.rojorabelisoa.finance.market.dto.SearchResultDto;
+import com.rojorabelisoa.finance.market.dto.TechnicalAnalysisDto;
 import com.rojorabelisoa.finance.shared.fmp.FmpClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class MarketController {
 
     private final MarketService marketService;
+    private final TechnicalAnalysisService technicalAnalysisService;
     private final FmpClient fmp;
 
     @GetMapping("/quote/{ticker}")
@@ -42,6 +44,13 @@ public class MarketController {
     @GetMapping("/fx")
     public ResponseEntity<Double> getFxRate(@RequestParam String from, @RequestParam String to) {
         return ResponseEntity.ok(marketService.getFxRate(from, to));
+    }
+
+    @GetMapping("/technical/{ticker}")
+    public ResponseEntity<TechnicalAnalysisDto> getTechnical(
+            @PathVariable String ticker,
+            @RequestParam(defaultValue = "200") int limit) {
+        return ResponseEntity.ok(technicalAnalysisService.analyze(ticker.toUpperCase(), limit));
     }
 
     // Debug endpoint — enabled only via ?debug=true on authenticated requests (dev use only)

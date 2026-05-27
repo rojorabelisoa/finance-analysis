@@ -15,6 +15,11 @@ const marketService = {
     const response = await api.get('/market/search', { params: { q: query } })
     return response.data
   },
+
+  async getTechnical(ticker, limit = 200) {
+    const response = await api.get(`/market/technical/${ticker}`, { params: { limit } })
+    return response.data
+  },
 }
 
 export default marketService

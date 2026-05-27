@@ -2,12 +2,15 @@ import React, { useState } from 'react'
 import marketService from '../features/market/services/marketService'
 import QuoteCard from '../features/market/components/QuoteCard'
 import FundamentalsPanel from '../features/market/components/FundamentalsPanel'
+import TechnicalChart from '../features/market/components/TechnicalChart'
+import TradeSetupPanel from '../features/market/components/TradeSetupPanel'
 import Card from '../shared/components/Card'
 
 export default function AnalysePage() {
   const [query, setQuery] = useState('')
   const [quote, setQuote] = useState(null)
   const [fundamentals, setFundamentals] = useState(null)
+  const [technical, setTechnical] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -19,6 +22,7 @@ export default function AnalysePage() {
     setLoading(true)
     setQuote(null)
     setFundamentals(null)
+    setTechnical(null)
     try {
       let resolvedTicker = raw
       const isIsin = /^[A-Z]{2}[A-Z0-9]{10}$/.test(raw)
@@ -28,12 +32,14 @@ export default function AnalysePage() {
           resolvedTicker = results[0].ticker || results[0].symbol || raw
         }
       }
-      const [quoteData, fundamentalsData] = await Promise.all([
+      const [quoteData, fundamentalsData, technicalData] = await Promise.all([
         marketService.getQuote(resolvedTicker),
         marketService.getFundamentals(resolvedTicker),
+        marketService.getTechnical(resolvedTicker).catch(() => null),
       ])
       setQuote(quoteData)
       setFundamentals(fundamentalsData)
+      setTechnical(technicalData)
     } catch {
       setError("Titre introuvable. Vérifiez le ticker ou l'ISIN.")
     } finally {
@@ -43,7 +49,7 @@ export default function AnalysePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-bold text-slate-100">Analyse fondamentale</h1>
+      <h1 className="text-xl font-bold text-slate-100">Analyse</h1>
 
       <Card>
         <form onSubmit={handleSearch} className="flex gap-3">
@@ -71,6 +77,19 @@ export default function AnalysePage() {
       )}
 
       {quote && <QuoteCard quote={quote} />}
+
+      {technical && technical.candles && technical.candles.length > 0 && (
+        <Card>
+          <h3 className="text-slate-100 font-semibold mb-1">Analyse technique — action sur les prix</h3>
+          <p className="text-xs text-slate-500 mb-4">
+            Support/résistance, order blocks, fair value gaps et points d'entrée détectés automatiquement.
+          </p>
+          <TechnicalChart analysis={technical} />
+          <div className="mt-5">
+            <TradeSetupPanel analysis={technical} />
+          </div>
+        </Card>
+      )}
 
       {fundamentals && <FundamentalsPanel fundamentals={fundamentals} />}
 
